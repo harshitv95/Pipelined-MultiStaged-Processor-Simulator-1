@@ -11,7 +11,6 @@
 
 #include "cpu.h"
 
-APEX_CPU* cpu = NULL;
 
 char* cliOption(char* prompt) {
   char* input = NULL;
@@ -35,15 +34,16 @@ get_num_from_string(char* buffer)
   return atoi(str);
 }
 
-void init(char* filename) {
-  cpu = APEX_cpu_init(filename);
+APEX_CPU* init(char* filename) {
+  APEX_CPU* cpu = APEX_cpu_init(filename);
   if (!cpu) {
     fprintf(stderr, "APEX_Error : Unable to initialize CPU\n");
     exit(1);
   }
+  return cpu;
 }
 
-void simulate(int numCycles) {
+void simulate(APEX_CPU* cpu, int numCycles) {
   APEX_cpu_run(cpu, numCycles);
 }
 
@@ -51,14 +51,14 @@ void display(int numCycles) {
 
 }
 
-void stop() {
+void stop(APEX_CPU* cpu) {
   if (cpu) APEX_cpu_stop(cpu);
   cpu = NULL;
 }
 
-void process_input(char* input, const char* argv[]) {
+void process_input(APEX_CPU* cpu, char* input, const char* argv[]) {
   if (strcmp(input, "initialize\n") == 0 || strcmp(input, "Initialize\n") == 0) {
-    init(argv[1]);
+    cpu = init(argv[1]);
   }
   else {
     if (!cpu) {
@@ -70,11 +70,11 @@ void process_input(char* input, const char* argv[]) {
     subst[8] = '\0';
     int numCycles = get_num_from_string(&input[8]);
     if (strcmp(subst, "simulate") == 0 || strcmp(subst, "Simulate") == 0) {
-      simulate(numCycles);
+      simulate(cpu, numCycles);
     } else if (strcmp(input, "display\n") == 0 || strcmp(input, "Display\n") == 0) {
       display(numCycles);
     } else if (strcmp(input, "stop\n") == 0 || strcmp(input, "Stop\n") == 0) {
-      stop();
+      stop(cpu);
     } else {
       printf("Invalid Option [%s]", input);
     }
@@ -90,25 +90,25 @@ main(int argc, char const* argv[])
   }
 
   char* input = NULL;
+  APEX_CPU* cpu;
   if (argc < 4) {
     // Opens a Command Line Interface
     while (strcmp(input = cliOption("APEX> "), "exit")) {
-      process_input(input, argv);
+      process_input(cpu, input, argv);
     }
   } else {
-    // const char*
-    init(argv[1]);
+    cpu = init(argv[1]);
     printf("Executing");
     input = argv[2];
     char* numCycles_chr = argv[3];
     if (strcmp(input, "simulate") == 0 || strcmp(input, "Simulate") == 0) {
       printf("Simulating");
-      simulate(get_num_from_string(numCycles_chr));
+      simulate(cpu, get_num_from_string(numCycles_chr));
     } else if (strcmp(input, "display") == 0 || strcmp(input, "Display") == 0) {
       display(get_num_from_string(numCycles_chr));
     }
 
-    stop();
+    stop(cpu);
   }
 
   return 0;

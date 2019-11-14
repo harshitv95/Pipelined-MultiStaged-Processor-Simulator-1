@@ -132,7 +132,7 @@ create_code_memory(const char* filename, int* size)
   }
 
   APEX_Instruction* code_memory =
-    malloc(sizeof(*code_memory) * code_memory_size);
+    malloc(sizeof(APEX_Instruction) * code_memory_size);
   if (!code_memory) {
     fclose(fp);
     return NULL;

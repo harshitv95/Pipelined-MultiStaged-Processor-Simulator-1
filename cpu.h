@@ -17,7 +17,8 @@ enum
   DRF,
   EX1,
   EX2,
-  MEM,
+  MEM1,
+  MEM2,
   WB,
   NUM_STAGES
 };
@@ -39,6 +40,7 @@ typedef struct CPU_Stage
   int buffer;		// Latch to hold some value
   int mem_address;	// Computed Memory Address
   int busy;		    // Flag to indicate, stage is performing some action
+  int empty;
   int stalled;		// Flag to indicate, stage is stalled
 } CPU_Stage;
 
@@ -65,8 +67,8 @@ typedef struct APEX_CPU
   /* Max number of registers supported by the CPU */
   int reg_count;
 
-  /* Array of 5 CPU_stage */
-  CPU_Stage stage[5];
+  /* Array of %NUM_STAGES% (7) CPU_stage */
+  CPU_Stage stage[NUM_STAGES];
 
   /* Code Memory where instructions are stored */
   APEX_Instruction* code_memory;
@@ -106,10 +108,14 @@ int
 decode(APEX_CPU* cpu);
 
 int
-execute(APEX_CPU* cpu);
+execute1(APEX_CPU* cpu);
+int
+execute2(APEX_CPU* cpu);
 
 int
-memory(APEX_CPU* cpu);
+memory1(APEX_CPU* cpu);
+int
+memory2(APEX_CPU* cpu);
 
 int
 writeback(APEX_CPU* cpu);

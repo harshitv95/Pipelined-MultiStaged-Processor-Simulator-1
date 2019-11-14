@@ -17,7 +17,7 @@
 
 CPU_Stage bubble;
 // TODO: Add stages
-char print_stages[6][16] = {"FETCH_____STAGE\0", "DECODE_RF_STAGE\0", "EX1_______STAGE\0", "EX2_______STAGE\0", "MEMORY____STAGE\0", "WRITEBACK_STAGE\0"};
+char print_stages[7][16] = {"FETCH_____STAGE\0", "DECODE_RF_STAGE\0", "EX1_______STAGE\0", "EX2_______STAGE\0", "MEMORY1___STAGE\0", "MEMORY2___STAGE\0", "WRITEBACK_STAGE\0"};
 
 /*
  * This function creates and initializes APEX cpu.
@@ -73,6 +73,7 @@ APEX_cpu_init(const char* filename)
   }
 
   /* Make all stages busy except Fetch stage, initally to start the pipeline */
+  /* Make instruction in all stages EMPTY (BUBBLE) except Fetch, to start the pipeline */
   for (int i = 1; i < NUM_STAGES; ++i) {
     cpu->stage[i].busy = 1;
     cpu->stage[i].opcode = _BUBBLE;
@@ -438,10 +439,10 @@ static int logical_or(APEX_CPU* cpu, int n1, int n2) {
 static void memory_access(APEX_CPU* cpu, int address, char mode) {
   switch(mode) {
     case 'r':
-      cpu->stage[MEM].buffer = cpu->data_memory[get_memory_index(address)];
+      cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
       break;
     case 'w':
-      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM].buffer;
+      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
       break;
   }
 }
@@ -530,7 +531,7 @@ execute2(APEX_CPU* cpu)
     }
 
     /* Copy data from Execute latch to Memory latch*/
-    cpu->stage[MEM] = cpu->stage[EX2];
+    cpu->stage[MEM1] = cpu->stage[EX2];
 
   }
   if (ENABLE_DEBUG_MESSAGES) {
@@ -548,9 +549,9 @@ execute2(APEX_CPU* cpu)
  * 				 implementation
  */
 int
-memory(APEX_CPU* cpu)
+memory1(APEX_CPU* cpu)
 {
-  CPU_Stage* stage = &cpu->stage[MEM];
+  CPU_Stage* stage = &cpu->stage[MEM1];
   if (!stage->busy && !stage->stalled) {
 
     switch (stage->opcode)
@@ -563,13 +564,29 @@ memory(APEX_CPU* cpu)
       break;
     }
 
-    /* Copy data from decode latch to execute latch*/
-    cpu->stage[WB] = cpu->stage[MEM];
+    /* Copy data from MEM1 latch to MEM2 latch*/
+    cpu->stage[MEM2] = cpu->stage[MEM1];
 
   }
   if (ENABLE_DEBUG_MESSAGES) {
     // print_stage_content("Memory", cpu, stage);
-    print_instruction(cpu, MEM);
+    print_instruction(cpu, MEM1);
+  }
+  return 0;
+}
+int
+memory2(APEX_CPU* cpu)
+{
+  CPU_Stage* stage = &cpu->stage[MEM2];
+  if (!stage->busy && !stage->stalled) {
+
+    /* Copy data from MEM2 latch to WB latch*/
+    cpu->stage[WB] = cpu->stage[MEM2];
+
+  }
+  if (ENABLE_DEBUG_MESSAGES) {
+    // print_stage_content("Memory", cpu, stage);
+    print_instruction(cpu, MEM2);
   }
   return 0;
 }
@@ -604,6 +621,7 @@ writeback(APEX_CPU* cpu)
       case SUB:
       case SUBL:
       case MUL:
+        // Setting Z Flag for Arithmetic operations
         cpu->Flag_Z = stage->buffer == 0 ? 1 : 0;
       default:
         register_wite(stage, cpu);
@@ -634,8 +652,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
 
     /* All the instructions committed, so exit */
     if (cpu->ins_completed == cpu->code_memory_size) {
-      display_register_contents(cpu);
-      printf("(apex) >> Simulation Complete");
+
       break;
     }
 
@@ -649,7 +666,8 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
       printf("\n----------------------------------- CLOCK CYCLE %d -----------------------------------\n", cpu->clock);
 
     writeback(cpu);
-    memory(cpu);
+    memory2(cpu);
+    memory1(cpu);
     execute2(cpu);
     execute1(cpu);
     decode(cpu);
@@ -658,7 +676,8 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
 
     cpu->clock++;
   }
-
+  display_register_contents(cpu);
+  printf("(apex) >> Simulation Complete");
 
   return 0;
 }
