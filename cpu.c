@@ -46,9 +46,16 @@ APEX_cpu_init(const char* filename)
   memset(cpu->regs_valid, 1, sizeof(int) * num_arch_registers);
   memset(cpu->stage, 0, sizeof(CPU_Stage) * NUM_STAGES);
   memset(cpu->data_memory, 0, sizeof(int) * 4000);
+  memset(cpu->flags, 0, sizeof(int) * NUM_FLAGS);
+  cpu->flags[JUMP_FLAG] = 0;
+  // memset(cpu->flags_valid, 1, sizeof(int) * NUM_FLAGS);
+  for (int i=0; i<NUM_FLAGS; i++) {
+    cpu->flags_valid[i] = 1;
+  }
 
   /* Parse input file and create code memory */
   cpu->code_memory = create_code_memory(filename, &cpu->code_memory_size);
+  cpu->num_instructions = cpu->code_memory_size;
 
   if (!cpu->code_memory) {
     free(cpu);
@@ -64,11 +71,12 @@ APEX_cpu_init(const char* filename)
 
     for (int i = 0; i < cpu->code_memory_size; ++i) {
       printf("%-9s %-9d %-9d %-9d %-9d\n",
-             opcodeToStr(cpu->code_memory[i].opcode),
-             cpu->code_memory[i].rd,
-             cpu->code_memory[i].rs1,
-             cpu->code_memory[i].rs2,
-             cpu->code_memory[i].imm);
+          opcodeToStr(cpu->code_memory[i].opcode),
+          cpu->code_memory[i].rd,
+          cpu->code_memory[i].rs1,
+          cpu->code_memory[i].rs2,
+          cpu->code_memory[i].imm
+        );
     }
   }
 
@@ -78,6 +86,10 @@ APEX_cpu_init(const char* filename)
     cpu->stage[i].busy = 1;
     cpu->stage[i].opcode = _BUBBLE;
   }
+
+  int code_index = get_code_index(cpu->pc);
+  cpu->stage[F].pc = cpu->pc;
+  do_fetch(cpu, &cpu->stage[F], code_index);
 
   bubble.opcode = _BUBBLE;
 
@@ -183,7 +195,7 @@ display_register_contents(APEX_CPU* cpu) {
     "\n=============== STATE OF ARCHITECTURAL REGISTER FILE ==========\n"
     );
   for (int i=0; i < cpu->reg_count; i++) {
-    printf("|\tREG[%d]\t|\tValue = %d\t|\tStatus = %s\t|\n",
+    printf("|\tREG[%02d]\t|\tValue = %-6d\t|\tStatus = %s\t|\n",
       i,
       cpu->regs[i],
       cpu->regs_valid[i] ? "VALID" : "INVALID"
@@ -193,10 +205,13 @@ display_register_contents(APEX_CPU* cpu) {
 
 static void
 display_memory_contents(APEX_CPU* cpu) {
+  int MAX_MEM_DISP = 100;
   printf(
     "\n============== STATE OF DATA MEMORY =============\n"
   );
-  // for (int i=0;)
+  for (int i=0; i<MAX_MEM_DISP; i++) {
+    printf("|\tMEM[%02d]\t|\tData Value = %02d\t|\n", i, cpu->data_memory[i]);
+  }
 }
 
 void print(APEX_CPU* cpu) {
@@ -207,7 +222,19 @@ void print(APEX_CPU* cpu) {
 }
 
 
+void do_fetch(APEX_CPU* cpu, CPU_Stage* stage, int code_index) {
+  APEX_Instruction* current_ins = &cpu->code_memory[code_index];
+  stage->opcode = current_ins->opcode;
+  stage->rd = current_ins->rd;
+  stage->rs1 = current_ins->rs1;
+  stage->rs2 = current_ins->rs2;
+  stage->rs3 = current_ins->rs3;
+  stage->imm = current_ins->imm;
+  stage->rd = current_ins->rd;
 
+  /* Update PC for next instruction */
+  cpu->pc += 4;
+}
 /*
  *  Fetch Stage of APEX Pipeline
  *
@@ -218,8 +245,26 @@ int
 fetch(APEX_CPU* cpu)
 {
   CPU_Stage* stage = &cpu->stage[F];
+
+  if (cpu->flags[JUMP_FLAG] == 1) {
+    cpu->flags[JUMP_FLAG] = 2;
+  } else if (cpu->flags[JUMP_FLAG] == 2) {
+    cpu->pc = cpu->jump_address_register;
+    cpu->flags[JUMP_FLAG] = 0;
+  }
+
   int code_index = get_code_index(cpu->pc);
-  if (!stage->busy && !stage->stalled) {  
+
+  if (stage->flushed)
+      cpu->stage[F] = create_bubble();
+  if (ENABLE_DEBUG_MESSAGES) {
+    // print_stage_content("Fetch", cpu, stage);
+    print_instruction(cpu, F);
+  }
+  if (!stage->busy && !stage->stalled) {
+    /* Copy data from fetch latch to decode latch*/
+    cpu->stage[DRF] = cpu->stage[F];
+
     /* Store current PC in fetch latch */
     stage->pc = cpu->pc;
 
@@ -228,28 +273,12 @@ fetch(APEX_CPU* cpu)
      */
     if (code_index >= cpu->code_memory_size)
       cpu->stage[F] = create_bubble();
-    else {
-      APEX_Instruction* current_ins = &cpu->code_memory[code_index];
-      stage->opcode = current_ins->opcode;
-      stage->rd = current_ins->rd;
-      stage->rs1 = current_ins->rs1;
-      stage->rs2 = current_ins->rs2;
-      stage->rs3 = current_ins->rs3;
-      stage->imm = current_ins->imm;
-      stage->rd = current_ins->rd;
+    else
+      do_fetch(cpu, stage, code_index);
 
-      /* Update PC for next instruction */
-      cpu->pc += 4;
-    }
-
-      /* Copy data from fetch latch to decode latch*/
-      cpu->stage[DRF] = cpu->stage[F];
-
+    cpu->fetched_before_stall = stage->stalled;
   }
-  if (ENABLE_DEBUG_MESSAGES) {
-    // print_stage_content("Fetch", cpu, stage);
-    print_instruction(cpu, F);
-  }
+  stage->flushed = 0;
   return 0;
 }
 
@@ -265,21 +294,35 @@ static void
       stage->rs2_value = cpu->regs[stage->rs2];
     if (readS3)
       stage->rs3_value = cpu->regs[stage->rs3];
-  // if (! (cpu->regs_valid[regNum]) ) {
-  //   // cpu->stage->stalled = 1;
-  //   cpu->stage[DRF].stalled = 1;
-  //   cpu->stage[F].stalled = 1;
-  // }
-  // else {
-  //   cpu->stage[DRF].stalled = 0;
-  //   cpu->stage[F].stalled = 0;
-  //   *valueField = cpu->regs[regNum];
-  // }
 }
+
+static int
+  get_flag(APEX_CPU *cpu, int flag) {
+    return cpu->flags[flag];
+  }
+
+static void
+  set_flag(APEX_CPU *cpu, int flag, int value) {
+    cpu->flags[flag] = value;
+    cpu->flags_valid[flag]++;
+  }
 
 /* Checks whether the specified register is valid */
 static int register_valid(int regNum, APEX_CPU* cpu) {
   return cpu->regs_valid[regNum];
+}
+
+void lock_register(APEX_CPU* cpu, int regNum) {
+  cpu->regs_valid[regNum] = 0;
+}
+
+/* Checks flags valid status */
+static int flag_valid(int flag, APEX_CPU* cpu) {
+  return cpu->flags_valid[flag] > 0;
+}
+
+static void lock_flag(int flag, APEX_CPU* cpu) {
+  cpu->flags_valid[flag]--;
 }
 
 static void change_stall_status(int stageId, APEX_CPU* cpu, int stallStatus) {
@@ -328,6 +371,11 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
         register_valid(stage->rs2, cpu) &&
         register_valid(stage->rs3, cpu)
       );
+    case BZ:
+    case BNZ:
+      return !(
+        flag_valid(ZERO_FLAG, cpu)
+      );
   }
   return 0;
 }
@@ -356,11 +404,12 @@ decode(APEX_CPU* cpu)
       cpu->stage[EX1] = create_bubble();
   }
 
-  if (!stage->busy && !stage->stalled) {
+  if (!stage->busy && !stage->stalled & !stage->flushed) {
     switch((opcode)(stage->opcode)) {
       case LOAD:
       case ADDL:
       case SUBL:
+      case JUMP:
         register_read(cpu, stage, 1, 0, 0);
         break;
       case ADD:
@@ -382,21 +431,23 @@ decode(APEX_CPU* cpu)
     // print_stage_content("Decode/RF", cpu, stage);
     print_instruction(cpu, DRF);
   }
+      
+  if (stage->flushed) {
+    stage->opcode = _BUBBLE;
+    stage->flushed = 0;
+    cpu->stage[EX1] = cpu->stage[DRF];
+  }
+
   return 0;
 }
 
-
-void lock_register(APEX_CPU* cpu, int regNum) {
-  cpu->regs_valid[regNum] = 0;
-}
-
 /* Functional Units */
-static int adder(APEX_CPU* cpu, int n1, int n2) {
+static int adder(CPU_Stage *stage, int n1, int n2) {
   int res = n1 + n2;
-  if (cpu)  {
-    CPU_Stage* stage = &cpu->stage[EX2];
+  // if (cpu)  {
+  //   CPU_Stage* stage = &cpu->stage[EX2];
     if (stage) stage->buffer = res;
-  }
+  // }
   return res;
 }
 
@@ -436,18 +487,48 @@ static int logical_or(APEX_CPU* cpu, int n1, int n2) {
   return res;
 }
 
-static void memory_access(APEX_CPU* cpu, int address, char mode) {
+union {
+    int value;
+    char bytes[4];
+} number;
+
+static int read_bytes_from_memory(int *data_memory, int address) {
+  for (int i=0; i<4; i++) {
+    number.bytes[i] = data_memory[3 - i + address];
+  }
+  return number.value;
+}
+
+static void write_bytes_to_memory(int *data_memory, int address, int write_number) {
+  number.value = write_number;
+  for (int i=0; i<4; i++) {
+    data_memory[3 - i + address] = number.bytes[i];
+  }
+}
+
+static void memory_access(APEX_CPU* cpu, int address, char mode, int stageId) {
   switch(mode) {
     case 'r':
-      cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
+      // cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
+      cpu->stage[stageId].buffer = read_bytes_from_memory(cpu->data_memory, address);
       break;
     case 'w':
-      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
+      // cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
+      write_bytes_to_memory(cpu->data_memory, address, cpu->stage[stageId].rs1_value);
       break;
   }
 }
 /********************/
 
+
+void flush_instructions(APEX_CPU *cpu, int startFromStage) {
+  for (int stageId = startFromStage; stageId>=0; stageId--) {
+    if (cpu) {
+      CPU_Stage *stage = &cpu->stage[stageId];
+      if (stage) stage->flushed = 1;
+    }
+  }
+}
 
 /*
  *  Execute Stage of APEX Pipeline
@@ -459,34 +540,55 @@ int
 execute1(APEX_CPU* cpu)
 {
   CPU_Stage* stage = &cpu->stage[EX1];
-  if (!stage->busy && !stage->stalled) {
+
+  if (!stage->busy && !stage->stalled && !stage->flushed) {
     switch(stage->opcode) {
       case ADD:
-      case LDR:
       case SUB:
-      case MOVC:
       case ADDL:
-      case LOAD:
       case SUBL:
       case MUL:
+        // Lock Z Flag
+        lock_flag(ZERO_FLAG, cpu);
+      case LDR:
+      case MOVC:
+      case LOAD:
       case AND:
       case OR:
       case EXOR:
         lock_register(cpu, stage->rd);
         break;
+
+      case JUMP:
+        adder(stage, stage->rs1_value, stage->imm);
+        break;
     }
 
     /* Copy data from Execute latch to Memory latch*/
     cpu->stage[EX2] = cpu->stage[EX1];
-
   }
   if (ENABLE_DEBUG_MESSAGES) {
     // print_stage_content("Execute", cpu, stage);
     print_instruction(cpu, EX1);
   }
+    
+  if (stage->flushed) {
+    stage->opcode = _BUBBLE;
+    stage->flushed = 0;
+    cpu->stage[EX2] = cpu->stage[EX1];
+  }
+
   return 0;
 }
 
+
+void branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
+  int take_branch = (cpu->flags[ZERO_FLAG] == zero_set);
+  if (take_branch) {
+    cpu->pc = cpu->stage[EX2].pc + pc_offset;
+    cpu->num_instructions += ( (-1 * pc_offset/4) + 1 );
+  }
+}
 
 int
 execute2(APEX_CPU* cpu)
@@ -496,25 +598,25 @@ execute2(APEX_CPU* cpu)
 
     switch(stage->opcode) {
       case STORE:
-        adder(cpu, stage->rs2_value, stage->imm);
+        adder(stage, stage->rs2_value, stage->imm);
         break;
       case STR:
-        adder(cpu, stage->rs2_value, stage->rs3_value);
+        adder(stage, stage->rs2_value, stage->rs3_value);
         break;
       case ADD:
       case LDR:
-        adder(cpu, stage->rs1_value, stage->rs2_value);
+        adder(stage, stage->rs1_value, stage->rs2_value);
         break;
       case SUB:
-        adder(cpu, stage->rs1_value, -1*stage->rs2_value);
+        adder(stage, stage->rs1_value, -1*stage->rs2_value);
         break;
       case MOVC:
       case ADDL:
       case LOAD:
-        adder(cpu, stage->rs1_value, stage->imm);
+        adder(stage, stage->rs1_value, stage->imm);
         break;
       case SUBL:
-        adder(cpu, stage->rs1_value, -1*(stage->imm));
+        adder(stage, stage->rs1_value, -1*(stage->imm));
         break;
       case MUL:
         multiplier(cpu, stage->rs1_value, stage->rs2_value);
@@ -527,6 +629,24 @@ execute2(APEX_CPU* cpu)
         break;
       case EXOR:
         logical_exor(cpu, stage->rs1, stage->rs2);
+        break;
+
+      case JUMP:
+        cpu->jump_address_register = stage->pc+4;
+        int pc_offset = stage->pc - stage->buffer;
+        cpu->num_instructions += ( (pc_offset/4) );
+        cpu->flags[JUMP_FLAG] = 1;
+        cpu->pc = stage->buffer;
+        flush_instructions(cpu, EX1);
+        break;
+      
+      case BNZ:
+        flush_instructions(cpu, EX1);
+        branch_with_zero(cpu, 0, stage->imm);
+        break;
+      case BZ:
+        flush_instructions(cpu, EX1);
+        branch_with_zero(cpu, 1, stage->imm);
         break;
     }
 
@@ -557,10 +677,10 @@ memory1(APEX_CPU* cpu)
     switch (stage->opcode)
     {
     case STORE:
-      memory_access(cpu, stage->buffer, 'w');
+      memory_access(cpu, stage->buffer, 'w', MEM1);
       break;
     case LOAD:
-      memory_access(cpu, stage->buffer, 'r');
+      memory_access(cpu, stage->buffer, 'r', MEM1);
       break;
     }
 
@@ -605,24 +725,24 @@ writeback(APEX_CPU* cpu)
 
     /* Update register file */
     switch(stage->opcode) {
-      // case LOAD:
-      // case MOVC:
-      // case ADD:
-      // case ADDL:
-      // case SUB:
-      // case SUBL:
-      // case MUL:
+      case _BUBBLE:
       case STORE:
       case STR:
       case NOP:
-      break;
+      case JUMP:
+      case BNZ:
+      case BZ:
+      case HALT:
+        // Do Nothing in WB Stage
+        break;
+
       case ADD:
       case ADDL:
       case SUB:
       case SUBL:
       case MUL:
-        // Setting Z Flag for Arithmetic operations
-        cpu->Flag_Z = stage->buffer == 0 ? 1 : 0;
+        // Set Z Flag for Arithmetic operations
+        set_flag(cpu, ZERO_FLAG, (stage->buffer == 0));
       default:
         register_wite(stage, cpu);
         break;
@@ -651,7 +771,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
   while (numCycles -- > 0) {
 
     /* All the instructions committed, so exit */
-    if (cpu->ins_completed == cpu->code_memory_size) {
+    if (cpu->ins_completed == cpu->num_instructions) {
 
       break;
     }
@@ -677,6 +797,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     cpu->clock++;
   }
   display_register_contents(cpu);
+  display_memory_contents(cpu);
   printf("(apex) >> Simulation Complete");
 
   return 0;

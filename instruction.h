@@ -64,9 +64,8 @@ typedef struct APEX_Instruction
 OpCode Enum accordingly */
 opcode evalOpCode(const char* opCode);
 
-/* Evaluates Instruction's source and destination registers */
-void evalInstRegVal(APEX_Instruction* ins, char tokens[]);
-
 char* opcodeToStr(opcode opcode);
+
+void parse_operands(APEX_Instruction* ins, char *tokens);
 
 #endif

@@ -97,6 +97,16 @@ create_APEX_instruction(APEX_Instruction* ins, char* buffer, int instNum)
       ins->rs1 = get_num_from_string(tokens[2]);
       ins->rs2 = get_num_from_string(tokens[3]);
       break;
+    case BZ:
+    case BNZ:
+      ins->imm = get_num_from_string(tokens[1]);
+      break;
+    case HALT:
+      break;
+    case JUMP:
+      ins->rs1 = get_num_from_string(tokens[1]);
+      ins->imm = get_num_from_string(tokens[2]);
+      break;
   }
 }
 

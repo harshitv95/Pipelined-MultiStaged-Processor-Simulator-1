@@ -42,6 +42,7 @@ typedef struct CPU_Stage
   int busy;		    // Flag to indicate, stage is performing some action
   int empty;
   int stalled;		// Flag to indicate, stage is stalled
+  int flushed;
 } CPU_Stage;
 
 /* Forwarding Bus to forward data and tag */
@@ -50,6 +51,14 @@ typedef struct FWD_BUS
   int tag;
   int data;
 } FWD_BUS;
+
+/* Flags */
+typedef enum {
+  ZERO_FLAG,
+  JUMP_FLAG,
+
+  NUM_FLAGS
+} flags;
 
 /* Model of APEX CPU */
 typedef struct APEX_CPU
@@ -60,12 +69,16 @@ typedef struct APEX_CPU
   /* Current program counter */
   int pc;
 
+  /* Max number of registers supported by the CPU */
+  int reg_count;
+
   /* Integer register file */
   int regs[32];
   int regs_valid[32];
 
-  /* Max number of registers supported by the CPU */
-  int reg_count;
+  /* Register to hold the address of the next instruction in sequence,
+  while temporarily switching to the JUMPed instruction address */
+  int jump_address_register;
 
   /* Array of %NUM_STAGES% (7) CPU_stage */
   CPU_Stage stage[NUM_STAGES];
@@ -73,9 +86,10 @@ typedef struct APEX_CPU
   /* Code Memory where instructions are stored */
   APEX_Instruction* code_memory;
   int code_memory_size;
+  int num_instructions;
 
   /* Data Memory */
-  int data_memory[4096];
+  int data_memory[4000];
 
   /* Some stats */
   int ins_completed;
@@ -84,7 +98,10 @@ typedef struct APEX_CPU
   FWD_BUS forward[2];
 
   /* Flags */
-  int Flag_Z;
+  int flags[NUM_FLAGS];
+  int flags_valid[NUM_FLAGS];
+
+  int fetched_before_stall;
 
 } APEX_CPU;
 

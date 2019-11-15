@@ -20,8 +20,13 @@ opcode evalOpCode(const char* opCode) {
     if (strcmp(opCode, "STR") == 0) return STR;
     if (strcmp(opCode, "LDR") == 0) return LDR;
     if (strcmp(opCode, "MUL") == 0) return MUL;
+    if (strcmp(opCode, "JUMP") == 0) return JUMP;
+    if (strcmp(opCode, "BZ") == 0) return BZ;
+    if (strcmp(opCode, "BNZ") == 0) return BNZ;
+    if (strcmp(opCode, "HALT") == 0) return HALT;
+    if (strcmp(opCode, "NOP") == 0) return NOP;
     // return NULL;
-    printf("[%s] is not a supported OpCode in current ISA", opCode);
+    printf("[%s] is not a supported OpCode in current ISA\n", opCode);
     exit(EXIT_FAILURE);
 }
 
@@ -39,6 +44,11 @@ char* opcodeToStr(opcode opcode) {
     case STR    : return "STR";
     case LDR    : return "LDR";
     case NOP    : return "NOP";
+    case JUMP   : return "JUMP";
+    case BZ     : return "BZ";
+    case BNZ    : return "BNZ";
+    case HALT   : return "HALT";
+
     case _BUBBLE: return "EMPTY";
     default: return "Instruction Not Identified";
     }
