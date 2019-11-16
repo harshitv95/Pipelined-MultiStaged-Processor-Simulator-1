@@ -56,6 +56,7 @@ typedef struct FWD_BUS
 typedef enum {
   ZERO_FLAG,
   JUMP_FLAG,
+  HALT_FLAG,
 
   NUM_FLAGS
 } flags;
@@ -139,6 +140,6 @@ writeback(APEX_CPU* cpu);
 
 void print(APEX_CPU* cpu);
 
-CPU_Stage* createBubble();
+CPU_Stage create_bubble();
 
 #endif

@@ -46,8 +46,7 @@ APEX_cpu_init(const char* filename)
   memset(cpu->regs_valid, 1, sizeof(int) * num_arch_registers);
   memset(cpu->stage, 0, sizeof(CPU_Stage) * NUM_STAGES);
   memset(cpu->data_memory, 0, sizeof(int) * 4000);
-  memset(cpu->flags, 0, sizeof(int) * NUM_FLAGS);
-  cpu->flags[JUMP_FLAG] = 0;
+  memset(cpu->flags, 0, sizeof(int) * NUM_FLAGS); // Important to initialize all flags with 0
   // memset(cpu->flags_valid, 1, sizeof(int) * NUM_FLAGS);
   for (int i=0; i<NUM_FLAGS; i++) {
     cpu->flags_valid[i] = 1;
@@ -221,6 +220,16 @@ void print(APEX_CPU* cpu) {
   
 }
 
+static int
+  get_flag(APEX_CPU *cpu, int flag) {
+    return cpu->flags[flag];
+  }
+
+static void
+  set_flag(APEX_CPU *cpu, int flag, int value) {
+    cpu->flags[flag] = value;
+    cpu->flags_valid[flag]++;
+  }
 
 void do_fetch(APEX_CPU* cpu, CPU_Stage* stage, int code_index) {
   APEX_Instruction* current_ins = &cpu->code_memory[code_index];
@@ -246,11 +255,11 @@ fetch(APEX_CPU* cpu)
 {
   CPU_Stage* stage = &cpu->stage[F];
 
-  if (cpu->flags[JUMP_FLAG] == 1) {
-    cpu->flags[JUMP_FLAG] = 2;
-  } else if (cpu->flags[JUMP_FLAG] == 2) {
+  if (get_flag(cpu, JUMP_FLAG) == 1) {
+    set_flag(cpu, JUMP_FLAG, 2);
+  } else if (get_flag(cpu, JUMP_FLAG) == 2) {
     cpu->pc = cpu->jump_address_register;
-    cpu->flags[JUMP_FLAG] = 0;
+    set_flag(cpu, JUMP_FLAG, 0);
   }
 
   int code_index = get_code_index(cpu->pc);
@@ -261,6 +270,11 @@ fetch(APEX_CPU* cpu)
     // print_stage_content("Fetch", cpu, stage);
     print_instruction(cpu, F);
   }
+
+  int halt = get_flag(cpu, HALT_FLAG);
+  if (halt)
+    cpu->stage[F] = create_bubble();
+
   if (!stage->busy && !stage->stalled) {
     /* Copy data from fetch latch to decode latch*/
     cpu->stage[DRF] = cpu->stage[F];
@@ -271,10 +285,12 @@ fetch(APEX_CPU* cpu)
     /* Index into code memory using this pc and copy all instruction fields into
      * fetch latch
      */
-    if (code_index >= cpu->code_memory_size)
-      cpu->stage[F] = create_bubble();
-    else
-      do_fetch(cpu, stage, code_index);
+    if (!halt) {
+      if (code_index >= cpu->code_memory_size)
+        cpu->stage[F] = create_bubble();
+      else
+        do_fetch(cpu, stage, code_index);
+    }
 
     cpu->fetched_before_stall = stage->stalled;
   }
@@ -295,17 +311,6 @@ static void
     if (readS3)
       stage->rs3_value = cpu->regs[stage->rs3];
 }
-
-static int
-  get_flag(APEX_CPU *cpu, int flag) {
-    return cpu->flags[flag];
-  }
-
-static void
-  set_flag(APEX_CPU *cpu, int flag, int value) {
-    cpu->flags[flag] = value;
-    cpu->flags_valid[flag]++;
-  }
 
 /* Checks whether the specified register is valid */
 static int register_valid(int regNum, APEX_CPU* cpu) {
@@ -420,6 +425,11 @@ decode(APEX_CPU* cpu)
         break;
       case STR:
         register_read(cpu, stage, 1, 1, 1);
+        break;
+      case HALT:
+        set_flag(cpu, HALT_FLAG, 1);
+        int pc_offset = cpu->code_memory_size - get_code_index(stage->pc) - 1;
+        cpu->num_instructions -= pc_offset;
         break;
     }
 
@@ -583,7 +593,7 @@ execute1(APEX_CPU* cpu)
 
 
 void branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
-  int take_branch = (cpu->flags[ZERO_FLAG] == zero_set);
+  int take_branch = (get_flag(cpu, ZERO_FLAG) == zero_set);
   if (take_branch) {
     cpu->pc = cpu->stage[EX2].pc + pc_offset;
     cpu->num_instructions += ( (-1 * pc_offset/4) + 1 );
@@ -635,7 +645,7 @@ execute2(APEX_CPU* cpu)
         cpu->jump_address_register = stage->pc+4;
         int pc_offset = stage->pc - stage->buffer;
         cpu->num_instructions += ( (pc_offset/4) );
-        cpu->flags[JUMP_FLAG] = 1;
+        set_flag(cpu, JUMP_FLAG, 1);
         cpu->pc = stage->buffer;
         flush_instructions(cpu, EX1);
         break;

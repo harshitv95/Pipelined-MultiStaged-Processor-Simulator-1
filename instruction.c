@@ -23,7 +23,9 @@ opcode evalOpCode(const char* opCode) {
     if (strcmp(opCode, "JUMP") == 0) return JUMP;
     if (strcmp(opCode, "BZ") == 0) return BZ;
     if (strcmp(opCode, "BNZ") == 0) return BNZ;
-    if (strcmp(opCode, "HALT") == 0) return HALT;
+    if (strcmp(opCode, "HALT") == 0 ||
+        strcmp(opCode, "HALT\n") == 0 ||
+        strcmp(opCode, "HALT\r\n") == 0) return HALT;
     if (strcmp(opCode, "NOP") == 0) return NOP;
     // return NULL;
     printf("[%s] is not a supported OpCode in current ISA\n", opCode);
