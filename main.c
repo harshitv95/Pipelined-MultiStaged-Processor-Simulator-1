@@ -34,8 +34,8 @@ get_num_from_string(char* buffer)
   return atoi(str);
 }
 
-APEX_CPU* init(char* filename) {
-  APEX_CPU* cpu = APEX_cpu_init(filename);
+APEX_CPU* init(char* filename, int debug) {
+  APEX_CPU* cpu = APEX_cpu_init(filename, debug);
   if (!cpu) {
     fprintf(stderr, "APEX_Error : Unable to initialize CPU\n");
     exit(1);
@@ -47,8 +47,8 @@ void simulate(APEX_CPU* cpu, int numCycles) {
   APEX_cpu_run(cpu, numCycles);
 }
 
-void display(int numCycles) {
-
+void display(APEX_CPU* cpu, int numCycles) {
+  APEX_cpu_run(cpu, numCycles);
 }
 
 void stop(APEX_CPU* cpu) {
@@ -58,7 +58,7 @@ void stop(APEX_CPU* cpu) {
 
 void process_input(APEX_CPU* cpu, char* input, const char* argv[]) {
   if (strcmp(input, "initialize\n") == 0 || strcmp(input, "Initialize\n") == 0) {
-    cpu = init(argv[1]);
+    cpu = init(argv[1], 0);
   }
   else {
     if (!cpu) {
@@ -72,7 +72,7 @@ void process_input(APEX_CPU* cpu, char* input, const char* argv[]) {
     if (strcmp(subst, "simulate") == 0 || strcmp(subst, "Simulate") == 0) {
       simulate(cpu, numCycles);
     } else if (strcmp(input, "display\n") == 0 || strcmp(input, "Display\n") == 0) {
-      display(numCycles);
+      display(cpu, numCycles);
     } else if (strcmp(input, "stop\n") == 0 || strcmp(input, "Stop\n") == 0) {
       stop(cpu);
     } else {
@@ -97,15 +97,14 @@ main(int argc, char const* argv[])
       process_input(cpu, input, argv);
     }
   } else {
-    cpu = init(argv[1]);
-    printf("Executing");
     input = argv[2];
     char* numCycles_chr = argv[3];
     if (strcmp(input, "simulate") == 0 || strcmp(input, "Simulate") == 0) {
-      printf("Simulating");
+      cpu = init(argv[1], 0);
       simulate(cpu, get_num_from_string(numCycles_chr));
     } else if (strcmp(input, "display") == 0 || strcmp(input, "Display") == 0) {
-      display(get_num_from_string(numCycles_chr));
+      cpu = init(argv[1], 1);
+      display(cpu, get_num_from_string(numCycles_chr));
     }
 
     stop(cpu);

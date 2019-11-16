@@ -6,7 +6,7 @@ MOVC      3         0         0         4012
 ADD       2         1         2         0        
 JUMP      0         3         0         0        
 STORE     0         2         1         -10      
-ExecutingSimulatingExecuting For 30 cycles
+Executing For 30 cycles
 ----------------------------------- CLOCK CYCLE 0 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
@@ -207,4 +207,4 @@ Instruction at FETCH_____STAGE --->		EMPTY
 |	MEM[97]	|	Data Value = 00	|
 |	MEM[98]	|	Data Value = 00	|
 |	MEM[99]	|	Data Value = 00	|
-(apex) >> Simulation Complete
+Simulation Completed after running for 9 Cycles (0 - 8)

@@ -13,7 +13,8 @@
 #include "cpu.h"
 
 /* Set this flag to 1 to enable debug messages */
-#define ENABLE_DEBUG_MESSAGES 1
+int ENABLE_DEBUG_MESSAGES = 0;
+// #define ENABLE_DEBUG_MESSAGES 1
 
 CPU_Stage bubble;
 // TODO: Add stages
@@ -26,8 +27,9 @@ char print_stages[7][16] = {"FETCH_____STAGE\0", "DECODE_RF_STAGE\0", "EX1______
  * 				implementation
  */
 APEX_CPU*
-APEX_cpu_init(const char* filename)
+APEX_cpu_init(const char* filename, int debug)
 {
+  ENABLE_DEBUG_MESSAGES = debug;
   if (!filename) {
     return NULL;
   }
@@ -806,9 +808,10 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
 
     cpu->clock++;
   }
+  cpu->clock--;
   display_register_contents(cpu);
   display_memory_contents(cpu);
-  printf("(apex) >> Simulation Complete");
+  printf("Simulation Completed after running for %d Cycles (%d - %d)", cpu->clock+1, 0, cpu->clock);
 
   return 0;
 }
