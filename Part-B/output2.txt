@@ -1,0 +1,210 @@
+opcode    rd        rs1       rs2       imm      
+MOVC      1         0         0         10       
+MOVC      2         0         0         15       
+HALT      0         0         0         0        
+MOVC      3         0         0         4012     
+ADD       2         1         2         0        
+JUMP      0         3         0         0        
+STORE     0         2         1         -10      
+Executing For 30 cycles
+----------------------------------- CLOCK CYCLE 0 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		(I0 : 4000) MOVC,R1,#10
+
+----------------------------------- CLOCK CYCLE 1 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at FETCH_____STAGE --->		(I1 : 4004) MOVC,R2,#15
+
+----------------------------------- CLOCK CYCLE 2 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at FETCH_____STAGE --->		(I2 : 4008) HALT
+
+----------------------------------- CLOCK CYCLE 3 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at EX1_______STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at DECODE_RF_STAGE --->		(I2 : 4008) HALT
+Instruction at FETCH_____STAGE --->		(I3 : 4012) MOVC,R3,#4012
+
+----------------------------------- CLOCK CYCLE 4 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at EX2_______STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at EX1_______STAGE --->		(I2 : 4008) HALT
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+----------------------------------- CLOCK CYCLE 5 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at MEMORY1___STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at EX2_______STAGE --->		(I2 : 4008) HALT
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+----------------------------------- CLOCK CYCLE 6 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I0 : 4000) MOVC,R1,#10
+Instruction at MEMORY2___STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at MEMORY1___STAGE --->		(I2 : 4008) HALT
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+----------------------------------- CLOCK CYCLE 7 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I1 : 4004) MOVC,R2,#15
+Instruction at MEMORY2___STAGE --->		(I2 : 4008) HALT
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+----------------------------------- CLOCK CYCLE 8 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I2 : 4008) HALT
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+=============== STATE OF ARCHITECTURAL REGISTER FILE ==========
+|	REG[00]	|	Value = 0     	|	Status = VALID	|
+|	REG[01]	|	Value = 10    	|	Status = VALID	|
+|	REG[02]	|	Value = 15    	|	Status = VALID	|
+|	REG[03]	|	Value = 0     	|	Status = VALID	|
+|	REG[04]	|	Value = 0     	|	Status = VALID	|
+|	REG[05]	|	Value = 0     	|	Status = VALID	|
+|	REG[06]	|	Value = 0     	|	Status = VALID	|
+|	REG[07]	|	Value = 0     	|	Status = VALID	|
+|	REG[08]	|	Value = 0     	|	Status = VALID	|
+|	REG[09]	|	Value = 0     	|	Status = VALID	|
+|	REG[10]	|	Value = 0     	|	Status = VALID	|
+|	REG[11]	|	Value = 0     	|	Status = VALID	|
+|	REG[12]	|	Value = 0     	|	Status = VALID	|
+|	REG[13]	|	Value = 0     	|	Status = VALID	|
+|	REG[14]	|	Value = 0     	|	Status = VALID	|
+|	REG[15]	|	Value = 0     	|	Status = VALID	|
+
+============== STATE OF DATA MEMORY =============
+|	MEM[00]	|	Data Value = 00	|
+|	MEM[01]	|	Data Value = 00	|
+|	MEM[02]	|	Data Value = 00	|
+|	MEM[03]	|	Data Value = 00	|
+|	MEM[04]	|	Data Value = 00	|
+|	MEM[05]	|	Data Value = 00	|
+|	MEM[06]	|	Data Value = 00	|
+|	MEM[07]	|	Data Value = 00	|
+|	MEM[08]	|	Data Value = 00	|
+|	MEM[09]	|	Data Value = 00	|
+|	MEM[10]	|	Data Value = 00	|
+|	MEM[11]	|	Data Value = 00	|
+|	MEM[12]	|	Data Value = 00	|
+|	MEM[13]	|	Data Value = 00	|
+|	MEM[14]	|	Data Value = 00	|
+|	MEM[15]	|	Data Value = 00	|
+|	MEM[16]	|	Data Value = 00	|
+|	MEM[17]	|	Data Value = 00	|
+|	MEM[18]	|	Data Value = 00	|
+|	MEM[19]	|	Data Value = 00	|
+|	MEM[20]	|	Data Value = 00	|
+|	MEM[21]	|	Data Value = 00	|
+|	MEM[22]	|	Data Value = 00	|
+|	MEM[23]	|	Data Value = 00	|
+|	MEM[24]	|	Data Value = 00	|
+|	MEM[25]	|	Data Value = 00	|
+|	MEM[26]	|	Data Value = 00	|
+|	MEM[27]	|	Data Value = 00	|
+|	MEM[28]	|	Data Value = 00	|
+|	MEM[29]	|	Data Value = 00	|
+|	MEM[30]	|	Data Value = 00	|
+|	MEM[31]	|	Data Value = 00	|
+|	MEM[32]	|	Data Value = 00	|
+|	MEM[33]	|	Data Value = 00	|
+|	MEM[34]	|	Data Value = 00	|
+|	MEM[35]	|	Data Value = 00	|
+|	MEM[36]	|	Data Value = 00	|
+|	MEM[37]	|	Data Value = 00	|
+|	MEM[38]	|	Data Value = 00	|
+|	MEM[39]	|	Data Value = 00	|
+|	MEM[40]	|	Data Value = 00	|
+|	MEM[41]	|	Data Value = 00	|
+|	MEM[42]	|	Data Value = 00	|
+|	MEM[43]	|	Data Value = 00	|
+|	MEM[44]	|	Data Value = 00	|
+|	MEM[45]	|	Data Value = 00	|
+|	MEM[46]	|	Data Value = 00	|
+|	MEM[47]	|	Data Value = 00	|
+|	MEM[48]	|	Data Value = 00	|
+|	MEM[49]	|	Data Value = 00	|
+|	MEM[50]	|	Data Value = 00	|
+|	MEM[51]	|	Data Value = 00	|
+|	MEM[52]	|	Data Value = 00	|
+|	MEM[53]	|	Data Value = 00	|
+|	MEM[54]	|	Data Value = 00	|
+|	MEM[55]	|	Data Value = 00	|
+|	MEM[56]	|	Data Value = 00	|
+|	MEM[57]	|	Data Value = 00	|
+|	MEM[58]	|	Data Value = 00	|
+|	MEM[59]	|	Data Value = 00	|
+|	MEM[60]	|	Data Value = 00	|
+|	MEM[61]	|	Data Value = 00	|
+|	MEM[62]	|	Data Value = 00	|
+|	MEM[63]	|	Data Value = 00	|
+|	MEM[64]	|	Data Value = 00	|
+|	MEM[65]	|	Data Value = 00	|
+|	MEM[66]	|	Data Value = 00	|
+|	MEM[67]	|	Data Value = 00	|
+|	MEM[68]	|	Data Value = 00	|
+|	MEM[69]	|	Data Value = 00	|
+|	MEM[70]	|	Data Value = 00	|
+|	MEM[71]	|	Data Value = 00	|
+|	MEM[72]	|	Data Value = 00	|
+|	MEM[73]	|	Data Value = 00	|
+|	MEM[74]	|	Data Value = 00	|
+|	MEM[75]	|	Data Value = 00	|
+|	MEM[76]	|	Data Value = 00	|
+|	MEM[77]	|	Data Value = 00	|
+|	MEM[78]	|	Data Value = 00	|
+|	MEM[79]	|	Data Value = 00	|
+|	MEM[80]	|	Data Value = 00	|
+|	MEM[81]	|	Data Value = 00	|
+|	MEM[82]	|	Data Value = 00	|
+|	MEM[83]	|	Data Value = 00	|
+|	MEM[84]	|	Data Value = 00	|
+|	MEM[85]	|	Data Value = 00	|
+|	MEM[86]	|	Data Value = 00	|
+|	MEM[87]	|	Data Value = 00	|
+|	MEM[88]	|	Data Value = 00	|
+|	MEM[89]	|	Data Value = 00	|
+|	MEM[90]	|	Data Value = 00	|
+|	MEM[91]	|	Data Value = 00	|
+|	MEM[92]	|	Data Value = 00	|
+|	MEM[93]	|	Data Value = 00	|
+|	MEM[94]	|	Data Value = 00	|
+|	MEM[95]	|	Data Value = 00	|
+|	MEM[96]	|	Data Value = 00	|
+|	MEM[97]	|	Data Value = 00	|
+|	MEM[98]	|	Data Value = 00	|
+|	MEM[99]	|	Data Value = 00	|
+Simulation Completed after running for 9 Cycles (0 - 8)
