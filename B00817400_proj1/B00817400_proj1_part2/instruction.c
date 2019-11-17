@@ -50,6 +50,9 @@ char* opcodeToStr(opcode opcode) {
     case BZ     : return "BZ";
     case BNZ    : return "BNZ";
     case HALT   : return "HALT";
+    case AND    : return "AND";
+    case OR    : return "OR";
+    case EXOR    : return "EXOR";
 
     case _BUBBLE: return "EMPTY";
     default: return "Instruction Not Identified";

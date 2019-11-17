@@ -75,14 +75,15 @@ APEX_cpu_init(const char* filename, int debug)
             "APEX_CPU : Initialized APEX CPU, loaded %d instructions\n",
             cpu->code_memory_size);
     fprintf(stderr, "APEX_CPU : Printing Code Memory\n");
-    printf("%-9s %-9s %-9s %-9s %-9s\n", "opcode", "rd", "rs1", "rs2", "imm");
+    printf("%-9s %-9s %-9s %-9s %-9s %-9s\n", "opcode", "rd", "rs1", "rs2", "rs3", "imm");
 
     for (int i = 0; i < cpu->code_memory_size; ++i) {
-      printf("%-9s %-9d %-9d %-9d %-9d\n",
+      printf("%-9s %-9d %-9d %-9d %-9d %-9d\n",
           opcodeToStr(cpu->code_memory[i].opcode),
           cpu->code_memory[i].rd,
           cpu->code_memory[i].rs1,
           cpu->code_memory[i].rs2,
+          cpu->code_memory[i].rs3,
           cpu->code_memory[i].imm
         );
     }

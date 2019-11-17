@@ -1,19 +1,20 @@
-opcode    rd        rs1       rs2       imm      
-MOVC      0         0         0         4000     
-MOVC      1         0         0         1        
-MOVC      2         0         0         2        
-MOVC      3         0         0         3        
-MOVC      4         0         0         1        
-ADD       5         0         1         0        
-ADD       6         1         2         0        
-SUB       4         4         1         0        
-BZ        0         0         0         -12      
-MUL       7         5         6         0        
-MOVC      8         0         0         0        
-Instruction Not Identified 9         7         8         0        
-HALT      0         0         0         0        
-MOVC      10        0         0         500      
-MOVC      11        0         0         10       
+opcode    rd        rs1       rs2       rs3       imm      
+MOVC      0         0         0         0         4000     
+STR       0         0         0         1         0        
+MOVC      1         0         0         0         1        
+MOVC      2         0         0         0         2        
+MOVC      3         0         0         0         3        
+MOVC      4         0         0         0         1        
+ADD       5         0         1         0         0        
+ADD       6         1         2         0         0        
+SUB       4         4         1         0         0        
+BZ        0         0         0         0         -12      
+MUL       7         5         6         0         0        
+MOVC      8         0         0         0         0        
+AND       9         7         8         0         0        
+HALT      0         0         0         0         0        
+MOVC      10        0         0         0         500      
+MOVC      11        0         0         0         10       
 Executing For 100 cycles
 ----------------------------------- CLOCK CYCLE 1 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
@@ -31,7 +32,7 @@ Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
 Instruction at DECODE_RF_STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at FETCH_____STAGE --->		(I1 : 4004) MOVC,R1,#1
+Instruction at FETCH_____STAGE --->		(I1 : 4004) STR,R0,R0,R1
 
 ----------------------------------- CLOCK CYCLE 3 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
@@ -39,335 +40,380 @@ Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at DECODE_RF_STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R2,#2
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R1,#1
 
 ----------------------------------- CLOCK CYCLE 4 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at EX1_______STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at DECODE_RF_STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at FETCH_____STAGE --->		(I3 : 4012) MOVC,R3,#3
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R1,#1
 
 ----------------------------------- CLOCK CYCLE 5 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at EX2_______STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at EX1_______STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at DECODE_RF_STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at FETCH_____STAGE --->		(I4 : 4016) MOVC,R4,#1
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R1,#1
 
 ----------------------------------- CLOCK CYCLE 6 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at MEMORY1___STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at EX2_______STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at EX1_______STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at DECODE_RF_STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at FETCH_____STAGE --->		(I5 : 4020) ADD,R5,R0,R1
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R1,#1
 
 ----------------------------------- CLOCK CYCLE 7 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		(I0 : 4000) MOVC,R0,#4000
-Instruction at MEMORY2___STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at MEMORY1___STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at EX2_______STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at EX1_______STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at DECODE_RF_STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at FETCH_____STAGE --->		(I6 : 4024) ADD,R6,R1,R2
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at FETCH_____STAGE --->		(I2 : 4008) MOVC,R1,#1
 
 ----------------------------------- CLOCK CYCLE 8 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I1 : 4004) MOVC,R1,#1
-Instruction at MEMORY2___STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at MEMORY1___STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at EX2_______STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at FETCH_____STAGE --->		(I6 : 4024) ADD,R6,R1,R2
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at DECODE_RF_STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at FETCH_____STAGE --->		(I3 : 4012) MOVC,R2,#2
 
 ----------------------------------- CLOCK CYCLE 9 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I2 : 4008) MOVC,R2,#2
-Instruction at MEMORY2___STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at MEMORY1___STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at DECODE_RF_STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at FETCH_____STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at EX1_______STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at DECODE_RF_STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at FETCH_____STAGE --->		(I4 : 4016) MOVC,R3,#3
 
 ----------------------------------- CLOCK CYCLE 10 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I3 : 4012) MOVC,R3,#3
-Instruction at MEMORY2___STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at EX1_______STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at DECODE_RF_STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at FETCH_____STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at EX2_______STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at EX1_______STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at DECODE_RF_STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at FETCH_____STAGE --->		(I5 : 4020) MOVC,R4,#1
 
 ----------------------------------- CLOCK CYCLE 11 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I4 : 4016) MOVC,R4,#1
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at EX2_______STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at FETCH_____STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at MEMORY1___STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at EX2_______STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at EX1_______STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at DECODE_RF_STAGE --->		(I5 : 4020) MOVC,R4,#1
+Instruction at FETCH_____STAGE --->		(I6 : 4024) ADD,R5,R0,R1
 
 ----------------------------------- CLOCK CYCLE 12 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at MEMORY1___STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at WRITEBACK_STAGE --->		(I1 : 4004) STR,R0,R0,R1
+Instruction at MEMORY2___STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at MEMORY1___STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at EX2_______STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at EX1_______STAGE --->		(I5 : 4020) MOVC,R4,#1
+Instruction at DECODE_RF_STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at FETCH_____STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 
 ----------------------------------- CLOCK CYCLE 13 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at MEMORY2___STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at WRITEBACK_STAGE --->		(I2 : 4008) MOVC,R1,#1
+Instruction at MEMORY2___STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at MEMORY1___STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at EX2_______STAGE --->		(I5 : 4020) MOVC,R4,#1
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at FETCH_____STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 
 ----------------------------------- CLOCK CYCLE 14 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at WRITEBACK_STAGE --->		(I3 : 4012) MOVC,R2,#2
+Instruction at MEMORY2___STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at MEMORY1___STAGE --->		(I5 : 4020) MOVC,R4,#1
 Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at EX1_______STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at DECODE_RF_STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at FETCH_____STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 
 ----------------------------------- CLOCK CYCLE 15 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at WRITEBACK_STAGE --->		(I4 : 4016) MOVC,R3,#3
+Instruction at MEMORY2___STAGE --->		(I5 : 4020) MOVC,R4,#1
 Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at EX2_______STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at EX1_______STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at DECODE_RF_STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at FETCH_____STAGE --->		(I9 : 4036) BZ,#-12
 
 ----------------------------------- CLOCK CYCLE 16 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at WRITEBACK_STAGE --->		(I5 : 4020) MOVC,R4,#1
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at EX2_______STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at FETCH_____STAGE --->		(I9 : 4036) BZ,#-12
 
 ----------------------------------- CLOCK CYCLE 17 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at MEMORY1___STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at DECODE_RF_STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at FETCH_____STAGE --->		(I10 : 4040) MOVC,R8,#0
+Instruction at EX1_______STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 18 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at WRITEBACK_STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at MEMORY2___STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at EX1_______STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at DECODE_RF_STAGE --->		(I10 : 4040) MOVC,R8,#0
-Instruction at FETCH_____STAGE --->		(I11 : 4044) AND,R9,R7,R8
+Instruction at EX2_______STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 19 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at WRITEBACK_STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at MEMORY1___STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		EMPTY
-Instruction at FETCH_____STAGE --->		(I5 : 4020) ADD,R5,R0,R1
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 20 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at MEMORY2___STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at FETCH_____STAGE --->		(I6 : 4024) ADD,R6,R1,R2
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 21 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at WRITEBACK_STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at DECODE_RF_STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at FETCH_____STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 22 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at EX1_______STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at DECODE_RF_STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at FETCH_____STAGE --->		(I8 : 4032) BZ,#-12
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at DECODE_RF_STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at FETCH_____STAGE --->		(I11 : 4044) MOVC,R8,#0
 
 ----------------------------------- CLOCK CYCLE 23 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at EX2_______STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at EX1_______STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at EX1_______STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at FETCH_____STAGE --->		(I12 : 4048) AND,R9,R7,R8
 
 ----------------------------------- CLOCK CYCLE 24 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at MEMORY1___STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at EX2_______STAGE --->		(I7 : 4028) SUB,R4,R4,R1
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-
------------------------------------ CLOCK CYCLE 25 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I5 : 4020) ADD,R5,R0,R1
-Instruction at MEMORY2___STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at MEMORY1___STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		(I9 : 4036) BZ,#-12
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		(I6 : 4024) ADD,R5,R0,R1
 
------------------------------------ CLOCK CYCLE 26 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I6 : 4024) ADD,R6,R1,R2
-Instruction at MEMORY2___STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+----------------------------------- CLOCK CYCLE 25 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		(I9 : 4036) BZ,#-12
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at FETCH_____STAGE --->		(I7 : 4028) ADD,R6,R1,R2
 
------------------------------------ CLOCK CYCLE 27 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I7 : 4028) SUB,R4,R4,R1
+----------------------------------- CLOCK CYCLE 26 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I9 : 4036) BZ,#-12
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at FETCH_____STAGE --->		(I9 : 4036) MUL,R7,R5,R6
+Instruction at EX1_______STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at DECODE_RF_STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at FETCH_____STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+
+----------------------------------- CLOCK CYCLE 27 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at EX1_______STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at DECODE_RF_STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at FETCH_____STAGE --->		(I9 : 4036) BZ,#-12
 
 ----------------------------------- CLOCK CYCLE 28 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at DECODE_RF_STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at FETCH_____STAGE --->		(I10 : 4040) MOVC,R8,#0
+Instruction at MEMORY1___STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at EX2_______STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at EX1_______STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 29 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at EX1_______STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at DECODE_RF_STAGE --->		(I10 : 4040) MOVC,R8,#0
-Instruction at FETCH_____STAGE --->		(I11 : 4044) AND,R9,R7,R8
+Instruction at MEMORY2___STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at MEMORY1___STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at EX2_______STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 30 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at EX2_______STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at EX1_______STAGE --->		(I10 : 4040) MOVC,R8,#0
-Instruction at DECODE_RF_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at FETCH_____STAGE --->		(I12 : 4048) HALT
+Instruction at WRITEBACK_STAGE --->		(I6 : 4024) ADD,R5,R0,R1
+Instruction at MEMORY2___STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at MEMORY1___STAGE --->		(I8 : 4032) SUB,R4,R4,R1
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
 ----------------------------------- CLOCK CYCLE 31 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at MEMORY1___STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at EX2_______STAGE --->		(I10 : 4040) MOVC,R8,#0
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at FETCH_____STAGE --->		(I12 : 4048) HALT
-
------------------------------------ CLOCK CYCLE 32 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I8 : 4032) BZ,#-12
-Instruction at MEMORY2___STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at MEMORY1___STAGE --->		(I10 : 4040) MOVC,R8,#0
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at FETCH_____STAGE --->		(I12 : 4048) HALT
-
------------------------------------ CLOCK CYCLE 33 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I9 : 4036) MUL,R7,R5,R6
-Instruction at MEMORY2___STAGE --->		(I10 : 4040) MOVC,R8,#0
+Instruction at WRITEBACK_STAGE --->		(I7 : 4028) ADD,R6,R1,R2
+Instruction at MEMORY2___STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at FETCH_____STAGE --->		(I12 : 4048) HALT
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
 
------------------------------------ CLOCK CYCLE 34 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I10 : 4040) MOVC,R8,#0
+----------------------------------- CLOCK CYCLE 32 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I8 : 4032) SUB,R4,R4,R1
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
-Instruction at DECODE_RF_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at FETCH_____STAGE --->		(I12 : 4048) HALT
+Instruction at DECODE_RF_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at FETCH_____STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+
+----------------------------------- CLOCK CYCLE 33 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at DECODE_RF_STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at FETCH_____STAGE --->		(I11 : 4044) MOVC,R8,#0
+
+----------------------------------- CLOCK CYCLE 34 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at EX1_______STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at DECODE_RF_STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at FETCH_____STAGE --->		(I12 : 4048) AND,R9,R7,R8
 
 ----------------------------------- CLOCK CYCLE 35 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		EMPTY
-Instruction at EX1_______STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at DECODE_RF_STAGE --->		(I12 : 4048) HALT
-Instruction at FETCH_____STAGE --->		(I13 : 4052) MOVC,R10,#500
+Instruction at MEMORY1___STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at EX2_______STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at EX1_______STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at DECODE_RF_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at FETCH_____STAGE --->		(I13 : 4052) HALT
 
 ----------------------------------- CLOCK CYCLE 36 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		EMPTY
-Instruction at EX2_______STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at EX1_______STAGE --->		(I12 : 4048) HALT
-Instruction at DECODE_RF_STAGE --->		EMPTY
-Instruction at FETCH_____STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at MEMORY1___STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at EX2_______STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at FETCH_____STAGE --->		(I13 : 4052) HALT
 
 ----------------------------------- CLOCK CYCLE 37 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I9 : 4036) BZ,#-12
+Instruction at MEMORY2___STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at MEMORY1___STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at FETCH_____STAGE --->		(I13 : 4052) HALT
+
+----------------------------------- CLOCK CYCLE 38 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I10 : 4040) MUL,R7,R5,R6
+Instruction at MEMORY2___STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at FETCH_____STAGE --->		(I13 : 4052) HALT
+
+----------------------------------- CLOCK CYCLE 39 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I11 : 4044) MOVC,R8,#0
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		EMPTY
+Instruction at DECODE_RF_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at FETCH_____STAGE --->		(I13 : 4052) HALT
+
+----------------------------------- CLOCK CYCLE 40 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
 Instruction at MEMORY2___STAGE --->		EMPTY
-Instruction at MEMORY1___STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at EX2_______STAGE --->		(I12 : 4048) HALT
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		EMPTY
+Instruction at EX1_______STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at DECODE_RF_STAGE --->		(I13 : 4052) HALT
+Instruction at FETCH_____STAGE --->		(I14 : 4056) MOVC,R10,#500
+
+----------------------------------- CLOCK CYCLE 41 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		EMPTY
+Instruction at EX2_______STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at EX1_______STAGE --->		(I13 : 4052) HALT
+Instruction at DECODE_RF_STAGE --->		EMPTY
+Instruction at FETCH_____STAGE --->		EMPTY
+
+----------------------------------- CLOCK CYCLE 42 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		EMPTY
+Instruction at MEMORY2___STAGE --->		EMPTY
+Instruction at MEMORY1___STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at EX2_______STAGE --->		(I13 : 4052) HALT
 Instruction at EX1_______STAGE --->		EMPTY
 Instruction at DECODE_RF_STAGE --->		EMPTY
 Instruction at FETCH_____STAGE --->		EMPTY
 
------------------------------------ CLOCK CYCLE 38 -----------------------------------
+----------------------------------- CLOCK CYCLE 43 -----------------------------------
 Instruction at WRITEBACK_STAGE --->		EMPTY
-Instruction at MEMORY2___STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at MEMORY1___STAGE --->		(I12 : 4048) HALT
+Instruction at MEMORY2___STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at MEMORY1___STAGE --->		(I13 : 4052) HALT
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
 Instruction at DECODE_RF_STAGE --->		EMPTY
 Instruction at FETCH_____STAGE --->		EMPTY
 
------------------------------------ CLOCK CYCLE 39 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I11 : 4044) AND,R9,R7,R8
-Instruction at MEMORY2___STAGE --->		(I12 : 4048) HALT
+----------------------------------- CLOCK CYCLE 44 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I12 : 4048) AND,R9,R7,R8
+Instruction at MEMORY2___STAGE --->		(I13 : 4052) HALT
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
 Instruction at EX1_______STAGE --->		EMPTY
 Instruction at DECODE_RF_STAGE --->		EMPTY
 Instruction at FETCH_____STAGE --->		EMPTY
 
------------------------------------ CLOCK CYCLE 40 -----------------------------------
-Instruction at WRITEBACK_STAGE --->		(I12 : 4048) HALT
+----------------------------------- CLOCK CYCLE 45 -----------------------------------
+Instruction at WRITEBACK_STAGE --->		(I13 : 4052) HALT
 Instruction at MEMORY2___STAGE --->		EMPTY
 Instruction at MEMORY1___STAGE --->		EMPTY
 Instruction at EX2_______STAGE --->		EMPTY
@@ -494,4 +540,4 @@ Instruction at FETCH_____STAGE --->		EMPTY
 |	MEM[97]	|	Data Value = 00	|
 |	MEM[98]	|	Data Value = 00	|
 |	MEM[99]	|	Data Value = 00	|
-Simulation Completed after running for 40 Cycles
+Simulation Completed after running for 45 Cycles
