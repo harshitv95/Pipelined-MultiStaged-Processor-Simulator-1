@@ -269,12 +269,12 @@ fetch(APEX_CPU* cpu)
 
   int code_index = get_code_index(cpu->pc);
 
-  if (stage->flushed)
-      cpu->stage[F] = create_bubble();
   if (ENABLE_DEBUG_MESSAGES) {
     // print_stage_content("Fetch", cpu, stage);
     print_instruction(cpu, F);
   }
+  if (stage->flushed)
+      cpu->stage[F] = create_bubble();
 
   int halt = get_flag(cpu, HALT_FLAG);
   if (halt)
@@ -346,7 +346,6 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
   CPU_Stage* stage = &cpu->stage[stageId];
   if (!stage) return 0;
   switch(stage->opcode) {
-    // Instructions with 2 sources and 1 destination
     case ADD:
     case LDR:
     case SUB:
@@ -354,27 +353,23 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
     case AND:
     case OR:
     case EXOR:
-      return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu) &&
-        register_valid(stage->rd, cpu)
-      );
     case STORE:
       return !(
         register_valid(stage->rs1, cpu) &&
         register_valid(stage->rs2, cpu)
+        // && register_valid(stage->rd, cpu) // Output dependency
       );
     case LOAD:
     case ADDL:
     case SUBL:
       return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rd, cpu)
+        register_valid(stage->rs1, cpu)
+        // && register_valid(stage->rd, cpu) // Output dependency
       );
-    case MOVC:
-      return !(
-        register_valid(stage->rd, cpu)
-      );
+    // case MOVC:
+    //   return !(
+    //     register_valid(stage->rd, cpu)
+    //   );
     case STR:
       return !(
         register_valid(stage->rs1, cpu) &&
@@ -521,14 +516,14 @@ static void write_bytes_to_memory(int *data_memory, int address, int write_numbe
   }
 }
 
-static void memory_access(APEX_CPU* cpu, int address, char mode, int stageId) {
+static void memory_access(APEX_CPU* cpu, int address, int data, CPU_Stage *stage, char mode) {
   switch(mode) {
     case 'r':
-      cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
+      stage->buffer = cpu->data_memory[(address)];
       // cpu->stage[stageId].buffer = read_bytes_from_memory(cpu->data_memory, address);
       break;
     case 'w':
-      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
+      cpu->data_memory[(address)] = data;
       // write_bytes_to_memory(cpu->data_memory, address, cpu->stage[stageId].rs1_value);
       break;
   }
@@ -597,12 +592,13 @@ execute1(APEX_CPU* cpu)
 }
 
 
-void branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
+int branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
   int take_branch = (get_flag(cpu, ZERO_FLAG) == zero_set);
   if (take_branch) {
     cpu->pc = cpu->stage[EX2].pc + pc_offset;
     cpu->num_instructions += ( (-1 * pc_offset/4) + 1 );
   }
+  return take_branch;
 }
 
 int
@@ -656,12 +652,12 @@ execute2(APEX_CPU* cpu)
         break;
       
       case BNZ:
-        flush_instructions(cpu, EX1);
-        branch_with_zero(cpu, 0, stage->imm);
+        if (branch_with_zero(cpu, 0, stage->imm))
+          flush_instructions(cpu, EX1);
         break;
       case BZ:
-        flush_instructions(cpu, EX1);
-        branch_with_zero(cpu, 1, stage->imm);
+        if (branch_with_zero(cpu, 1, stage->imm))
+          flush_instructions(cpu, EX1);
         break;
     }
 
@@ -692,10 +688,12 @@ memory1(APEX_CPU* cpu)
     switch (stage->opcode)
     {
     case STORE:
-      memory_access(cpu, stage->buffer, 'w', MEM1);
+    case STR:
+      memory_access(cpu, stage->buffer, stage->rs1_value, stage, 'w');
       break;
     case LOAD:
-      memory_access(cpu, stage->buffer, 'r', MEM1);
+    case LDR:
+      memory_access(cpu, stage->buffer, -1, stage, 'r');
       break;
     }
 
@@ -773,6 +771,14 @@ writeback(APEX_CPU* cpu)
   return 0;
 }
 
+int has_instructions(APEX_CPU *cpu) {
+  for (int i = NUM_STAGES-1; i>=0; i--) {
+    if (cpu->stage[i].opcode != _BUBBLE)
+      return 1;
+  }
+  return 0;
+}
+
 /*
  *  APEX CPU simulation loop
  *
@@ -783,13 +789,13 @@ int
 APEX_cpu_run(APEX_CPU* cpu, int numCycles)
 {
   printf("Executing For %d cycles", numCycles);
-  while (numCycles -- > 0) {
+  while (numCycles -- > 0 && has_instructions(cpu)) {
 
     /* All the instructions committed, so exit */
-    if (cpu->ins_completed == cpu->num_instructions) {
+    // if (cpu->ins_completed == cpu->num_instructions) {
 
-      break;
-    }
+    //   break;
+    // }
 
     // if (ENABLE_DEBUG_MESSAGES) {
     //   printf("--------------------------------\n");
@@ -797,6 +803,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     //   printf("--------------------------------\n");
     // }
     // print_instructions(cpu);
+    cpu->clock++;
     if (ENABLE_DEBUG_MESSAGES)
       printf("\n----------------------------------- CLOCK CYCLE %d -----------------------------------\n", cpu->clock);
 
@@ -809,12 +816,12 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     fetch(cpu);
 
 
-    cpu->clock++;
   }
-  cpu->clock--;
+  cpu->clock;
   display_register_contents(cpu);
   display_memory_contents(cpu);
-  printf("Simulation Completed after running for %d Cycles (%d - %d)", cpu->clock+1, 0, cpu->clock);
+  printf("Simulation Completed after running for %d Cycles", cpu->clock);
+  // printf("Simulation Completed after running for %d Cycles (%d - %d)", cpu->clock+1, 0, cpu->clock);
 
   return 0;
 }

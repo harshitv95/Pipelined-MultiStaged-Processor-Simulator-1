@@ -231,14 +231,14 @@ void print(APEX_CPU* cpu) {
 
 void invalidate_forward_buses(APEX_CPU *cpu) {
   for (int i=0; i<NUM_FWD_BUSES; i++)
-    cpu->forward[i].valid = 0;
+    cpu->forward[i].valid = cpu->broadcast[i].valid = 0;
   cpu->forward_zero->valid = 0;
 }
 
 /* Forwarding */
 void broadcast_tag(APEX_CPU *cpu, int forward_bus, int tag) {
-  cpu->forward[forward_bus].tag = tag;
-  cpu->forward[forward_bus].valid = 1;
+  cpu->broadcast[forward_bus].tag = tag;
+  cpu->broadcast[forward_bus].valid = 1;
 }
 /**************/
 
@@ -288,12 +288,12 @@ fetch(APEX_CPU* cpu)
 
   int code_index = get_code_index(cpu->pc);
 
-  if (stage->flushed)
-      cpu->stage[F] = create_bubble();
   if (ENABLE_DEBUG_MESSAGES) {
     // print_stage_content("Fetch", cpu, stage);
     print_instruction(cpu, F);
   }
+  if (stage->flushed)
+      cpu->stage[F] = create_bubble();
 
   int halt = get_flag(cpu, HALT_FLAG);
   if (halt)
@@ -322,27 +322,15 @@ fetch(APEX_CPU* cpu)
   return 0;
 }
 
-
-/*
-Register Fetch (reading register file with 3 read ports)
-*/
-static void
-  register_read(APEX_CPU* cpu, CPU_Stage* stage, int readS1, int readS2, int readS3) {
-    if (readS1) {
-      stage->rs1_value = cpu->regs[stage->rs1];
-      stage->rs1_valid = 1;
-    }
-    if (readS2) {
-      stage->rs2_value = cpu->regs[stage->rs2];
-      stage->rs2_valid = 1;
-    }
-    if (readS3) {
-      stage->rs3_value = cpu->regs[stage->rs3];
-      stage->rs3_valid = 1;
-    }
+static int check_forwarded_register(int regNum, APEX_CPU* cpu) {
+  for (int i=0; i<NUM_FWD_BUSES; i++) {
+    if (cpu->broadcast[i].valid && cpu->broadcast[i].tag == regNum)
+      return i;
+  }
+  return -1;
 }
 
-static int check_forwarded_register(int regNum, APEX_CPU* cpu) {
+static int check_forwarded_bus_data(int regNum, APEX_CPU* cpu) {
   for (int i=0; i<NUM_FWD_BUSES; i++) {
     if (cpu->forward[i].valid && cpu->forward[i].tag == regNum)
       return i;
@@ -357,9 +345,10 @@ static void
     switch (stage->opcode)
     {
     case STR:
-      if ( !stage->rs3_valid && (n = check_forwarded_register(stage->rs3, cpu)) > -1 )
+      if ( !stage->rs3_valid && (n = check_forwarded_bus_data(stage->rs3, cpu)) > -1 ) {
         stage->rs3_value = cpu->forward[n].data;
-
+        stage->rs3_valid = 1;
+      }
     case ADD:
     case SUB:
     case MUL:
@@ -368,15 +357,18 @@ static void
     case EXOR:
     case OR:
     case AND:
-      if ( !stage->rs2_valid && (n = check_forwarded_register(stage->rs2, cpu)) > -1 )
+      if ( !stage->rs2_valid && (n = check_forwarded_bus_data(stage->rs2, cpu)) > -1 ) {
         stage->rs2_value = cpu->forward[n].data;
-
+        stage->rs2_valid = 1;
+      }
     case ADDL:
     case SUBL:
     case JUMP:
     case LOAD:
-    if ( !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
+    if ( !stage->rs1_valid && (n = check_forwarded_bus_data(stage->rs1, cpu)) > -1 ) {
       stage->rs1_value = cpu->forward[n].data;
+      stage->rs1_valid = 1;
+    }
     break;
     }
   }
@@ -413,7 +405,6 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
   CPU_Stage* stage = &cpu->stage[stageId];
   if (!stage) return 0;
   switch(stage->opcode) {
-    // Instructions with 2 sources and 1 destination
     case ADD:
     case LDR:
     case SUB:
@@ -421,32 +412,28 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
     case AND:
     case OR:
     case EXOR:
+    case STORE:
       return !(
         register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu) &&
-        register_valid(stage->rd, cpu)
+        register_valid(stage->rs2, cpu)
+        // && register_valid(stage->rd, cpu) // Output dependency
       );
     case LOAD:
     case ADDL:
     case SUBL:
       return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rd, cpu)
+        register_valid(stage->rs1, cpu)
+        // && register_valid(stage->rd, cpu) // Output dependency
       );
-    case MOVC:
-      return !(
-        register_valid(stage->rd, cpu)
-      );
+    // case MOVC:
+    //   return !(
+    //     register_valid(stage->rd, cpu)
+    //   );
     case STR:
       return !(
         register_valid(stage->rs1, cpu) &&
         register_valid(stage->rs2, cpu) &&
         register_valid(stage->rs3, cpu)
-      );
-    case STORE:
-      return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu)
       );
     case BZ:
     case BNZ:
@@ -462,6 +449,25 @@ static void register_wite(CPU_Stage* stage, APEX_CPU* cpu) {
   int regNum = stage->rd;
   cpu->regs[regNum] = stage->buffer;
   cpu->regs_valid[regNum]++;
+}
+
+/*
+Register Fetch (reading register file with 3 read ports)
+*/
+static void
+  register_read(APEX_CPU* cpu, CPU_Stage* stage, int readS1, int readS2, int readS3) {
+    if (readS1 && (cpu->regs_valid[stage->rs1] > 0)) {
+      stage->rs1_value = cpu->regs[stage->rs1];
+      stage->rs1_valid = 1;
+    }
+    if (readS2 && (cpu->regs_valid[stage->rs2] > 0)) {
+      stage->rs2_value = cpu->regs[stage->rs2];
+      stage->rs2_valid = 1;
+    }
+    if (readS3 && (cpu->regs_valid[stage->rs3] > 0)) {
+      stage->rs3_value = cpu->regs[stage->rs3];
+      stage->rs3_valid = 1;
+    }
 }
 
 /*
@@ -503,6 +509,13 @@ decode(APEX_CPU* cpu)
         set_flag(cpu, HALT_FLAG, 1);
         int pc_offset = cpu->code_memory_size - get_code_index(stage->pc) - 1;
         cpu->num_instructions -= pc_offset;
+        break;
+      case BZ:
+      case BNZ:
+        if (cpu->forward_zero->valid)
+          stage->buffer = cpu->forward_zero->data;
+        else if (flag_valid(ZERO_FLAG, cpu))
+          stage->buffer = get_flag(ZERO_FLAG, cpu);
         break;
     }
 
@@ -589,14 +602,14 @@ static void write_bytes_to_memory(int *data_memory, int address, int write_numbe
   }
 }
 
-static void memory_access(APEX_CPU* cpu, int address, char mode, int stageId) {
+static void memory_access(APEX_CPU* cpu, int address, int data, CPU_Stage *stage, char mode) {
   switch(mode) {
     case 'r':
-      cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
+      stage->buffer = cpu->data_memory[(address)];
       // cpu->stage[stageId].buffer = read_bytes_from_memory(cpu->data_memory, address);
       break;
     case 'w':
-      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
+      cpu->data_memory[(address)] = data;
       // write_bytes_to_memory(cpu->data_memory, address, cpu->stage[stageId].rs1_value);
       break;
   }
@@ -643,6 +656,11 @@ execute1(APEX_CPU* cpu)
       case EXOR:
         lock_register(cpu, stage->rd);
         break;
+      
+      case BZ:
+      case BNZ:
+        
+        break;
 
       case JUMP:
         adder(stage, stage->rs1_value, stage->imm);
@@ -667,6 +685,17 @@ execute1(APEX_CPU* cpu)
         break;
     }
 
+    switch (stage->opcode)
+    {
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+        cpu->forward_zero->valid = 0;
+        break;
+    }
+
     /* Copy data from Execute latch to Memory latch*/
     cpu->stage[EX2] = cpu->stage[EX1];
   }
@@ -685,12 +714,14 @@ execute1(APEX_CPU* cpu)
 }
 
 
-void branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
-  int take_branch = (get_flag(cpu, ZERO_FLAG) == zero_set);
+int branch_with_zero(APEX_CPU* cpu, int zero_set, int pc_offset) {
+  CPU_Stage *stage = &cpu->stage[EX2];
+  int take_branch = (stage->buffer == zero_set);
   if (take_branch) {
-    cpu->pc = cpu->stage[EX2].pc + pc_offset;
+    cpu->pc = stage->pc + pc_offset;
     cpu->num_instructions += ( (-1 * pc_offset/4) + 1 );
   }
+  return take_branch;
 }
 
 int
@@ -744,12 +775,12 @@ execute2(APEX_CPU* cpu)
         break;
       
       case BNZ:
-        flush_instructions(cpu, EX1);
-        branch_with_zero(cpu, 0, stage->imm);
+        if (branch_with_zero(cpu, 0, stage->imm))
+          flush_instructions(cpu, EX1);
         break;
       case BZ:
-        flush_instructions(cpu, EX1);
-        branch_with_zero(cpu, 1, stage->imm);
+        if (branch_with_zero(cpu, 1, stage->imm))
+          flush_instructions(cpu, EX1);
         break;
     }
     
@@ -763,9 +794,9 @@ execute2(APEX_CPU* cpu)
         cpu->forward_zero->valid = 1;
         cpu->forward_zero->data = stage->buffer == 0;
         break;
-    default:
+      default:
         cpu->forward_zero->valid = 0;
-      break;
+        break;
     }
 
     switch(stage->opcode) {
@@ -780,6 +811,8 @@ execute2(APEX_CPU* cpu)
       case OR:
       case AND:
         cpu->forward[0].data = stage->buffer;
+        cpu->forward[0].valid = 1;
+        cpu->forward[0].tag = stage->rd;
         break;
       default:
         break;
@@ -812,10 +845,10 @@ memory1(APEX_CPU* cpu)
     switch (stage->opcode)
     {
     case STORE:
-      memory_access(cpu, stage->buffer, 'w', MEM1);
+      memory_access(cpu, stage->buffer, stage->rs1_value, stage, 'w');
       break;
     case LOAD:
-      memory_access(cpu, stage->buffer, 'r', MEM1);
+      memory_access(cpu, stage->buffer, -1, stage, 'r');
       break;
     }
         
@@ -892,6 +925,8 @@ memory2(APEX_CPU* cpu)
     case LOAD:
     case LDR:
       cpu->forward[1].data = stage->buffer;
+      cpu->forward[1].valid = 1;
+      cpu->forward[1].tag = stage->rd;
       break;
     default:
       break;
@@ -947,6 +982,14 @@ writeback(APEX_CPU* cpu)
   return 0;
 }
 
+int has_instructions(APEX_CPU *cpu) {
+  for (int i = NUM_STAGES-1; i>=0; i--) {
+    if (cpu->stage[i].opcode != _BUBBLE)
+      return 1;
+  }
+  return 0;
+}
+
 /*
  *  APEX CPU simulation loop
  *
@@ -957,13 +1000,13 @@ int
 APEX_cpu_run(APEX_CPU* cpu, int numCycles)
 {
   printf("Executing For %d cycles", numCycles);
-  while (numCycles -- > 0) {
+  while (numCycles -- > 0 && has_instructions(cpu)) {
 
     /* All the instructions committed, so exit */
-    if (cpu->ins_completed == cpu->num_instructions) {
+    // if (cpu->ins_completed == cpu->num_instructions) {
 
-      break;
-    }
+    //   break;
+    // }
 
     // if (ENABLE_DEBUG_MESSAGES) {
     //   printf("--------------------------------\n");
@@ -971,6 +1014,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     //   printf("--------------------------------\n");
     // }
     // print_instructions(cpu);
+    cpu->clock++;
     if (ENABLE_DEBUG_MESSAGES)
       printf("\n----------------------------------- CLOCK CYCLE %d -----------------------------------\n", cpu->clock);
 
@@ -984,12 +1028,11 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     fetch(cpu);
 
 
-    cpu->clock++;
   }
-  cpu->clock--;
   display_register_contents(cpu);
   display_memory_contents(cpu);
-  printf("Simulation Completed after running for %d Cycles (%d - %d)", cpu->clock+1, 0, cpu->clock);
+  printf("Simulation Completed after running for %d Cycles", cpu->clock);
+  // printf("Simulation Completed after running for %d Cycles (%d - %d)", cpu->clock+1, 0, cpu->clock);
 
   return 0;
 }

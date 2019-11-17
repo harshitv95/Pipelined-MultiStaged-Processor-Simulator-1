@@ -104,6 +104,7 @@ typedef struct APEX_CPU
 
   /* 2 Forwarding Buses, 1 from EX2 and another from MEM2 */
   FWD_BUS forward[NUM_FWD_BUSES];
+  FWD_BUS broadcast[NUM_FWD_BUSES];
   FWD_BUS *forward_zero;
 
   /* Flags */
