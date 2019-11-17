@@ -11,6 +11,8 @@
  *  State University of New York, Binghamton
  */
 
+#define NUM_FWD_BUSES 2
+
 enum
 {
   F,
@@ -32,17 +34,21 @@ typedef struct CPU_Stage
   int rs1;		    // Source-1 Register Address
   int rs2;		    // Source-2 Register Address
   int rs3;		    // Source-3 Register Address
-  int rd;		    // Destination Register Address
+  int rd;		      // Destination Register Address
   int imm;		    // Literal Value
   int rs1_value;	// Source-1 Register Value
   int rs2_value;	// Source-2 Register Value
   int rs3_value;	// Source-3 Register Value
+  int rs1_valid;  // Source-1 valid
+  int rs2_valid;
+  int rs3_valid;
   int buffer;		// Latch to hold some value
   int mem_address;	// Computed Memory Address
   int busy;		    // Flag to indicate, stage is performing some action
   int empty;
   int stalled;		// Flag to indicate, stage is stalled
   int flushed;
+
 } CPU_Stage;
 
 /* Forwarding Bus to forward data and tag */
@@ -50,6 +56,7 @@ typedef struct FWD_BUS
 {
   int tag;
   int data;
+  int valid;
 } FWD_BUS;
 
 /* Flags */
@@ -96,7 +103,8 @@ typedef struct APEX_CPU
   int ins_completed;
 
   /* 2 Forwarding Buses, 1 from EX2 and another from MEM2 */
-  FWD_BUS forward[2];
+  FWD_BUS forward[NUM_FWD_BUSES];
+  FWD_BUS *forward_zero;
 
   /* Flags */
   int flags[NUM_FLAGS];

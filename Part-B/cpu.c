@@ -63,6 +63,10 @@ APEX_cpu_init(const char* filename, int debug)
     return NULL;
   }
 
+  cpu->forward_zero = (FWD_BUS *) malloc(sizeof(FWD_BUS));
+  cpu->forward_zero->valid = 0;
+  cpu->forward[0].valid = cpu->forward[1].valid = 0;
+
   if (ENABLE_DEBUG_MESSAGES) {
     fprintf(stderr,
             "APEX_CPU : Initialized APEX CPU, loaded %d instructions\n",
@@ -222,6 +226,15 @@ void print(APEX_CPU* cpu) {
   
 }
 
+/* Forwarding */
+void broadcast_tag(APEX_CPU *cpu, int forward_bus, int tag) {
+  cpu->forward[forward_bus].tag = tag;
+  cpu->forward[forward_bus].valid = 1;
+}
+/**************/
+
+
+
 static int
   get_flag(APEX_CPU *cpu, int flag) {
     return cpu->flags[flag];
@@ -306,17 +319,71 @@ Register Fetch (reading register file with 3 read ports)
 */
 static void
   register_read(APEX_CPU* cpu, CPU_Stage* stage, int readS1, int readS2, int readS3) {
-    if (readS1)
+    if (readS1) {
       stage->rs1_value = cpu->regs[stage->rs1];
-    if (readS2)
+      stage->rs1_valid = 1;
+    }
+    if (readS2) {
       stage->rs2_value = cpu->regs[stage->rs2];
-    if (readS3)
+      stage->rs2_valid = 1;
+    }
+    if (readS3) {
       stage->rs3_value = cpu->regs[stage->rs3];
+      stage->rs3_valid = 1;
+    }
 }
+
+static int check_forwarded_register(int regNum, APEX_CPU* cpu) {
+  for (int i=0; i<NUM_FWD_BUSES; i++) {
+    if (cpu->forward[i].valid && cpu->forward[i].tag == regNum)
+      return i;
+  }
+  return -1;
+}
+
+static void
+  forward_bus_read(APEX_CPU* cpu, CPU_Stage* stage, int readS1, int readS2, int readS3) {
+    int n = -1;
+    if ( readS1 && !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
+      stage->rs1_value = cpu->forward[n].data;
+    if ( readS2 && !stage->rs2_valid && (n = check_forwarded_register(stage->rs2, cpu)) > -1 )
+      stage->rs2_value = cpu->forward[n].data;
+    if ( readS3 && !stage->rs3_valid && (n = check_forwarded_register(stage->rs3, cpu)) > -1 )
+      stage->rs3_value = cpu->forward[n].data;
+
+    switch (stage->opcode)
+    {
+    case STR:
+      if ( !stage->rs3_valid && (n = check_forwarded_register(stage->rs3, cpu)) > -1 )
+        stage->rs3_value = cpu->forward[n].data;
+
+    case ADD:
+    case SUB:
+    case MUL:
+    case STORE:
+    case LDR:
+    case EXOR:
+    case OR:
+    case AND:
+      if ( !stage->rs2_valid && (n = check_forwarded_register(stage->rs2, cpu)) > -1 )
+        stage->rs2_value = cpu->forward[n].data;
+
+    case ADDL:
+    case SUBL:
+    case JUMP:
+    case LOAD:
+    if ( readS1 && !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
+      stage->rs1_value = cpu->forward[n].data;
+      break;
+    }
+  }
 
 /* Checks whether the specified register is valid */
 static int register_valid(int regNum, APEX_CPU* cpu) {
-  return cpu->regs_valid[regNum];
+  return
+  // (cpu->forward[0].tag = regNum && cpu->forward[0].valid) ||
+  // (cpu->forward[1].tag = regNum && cpu->forward[1].valid) ||
+  cpu->regs_valid[regNum];
 }
 
 void lock_register(APEX_CPU* cpu, int regNum) {
@@ -356,11 +423,6 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
         register_valid(stage->rs2, cpu) &&
         register_valid(stage->rd, cpu)
       );
-    case STORE:
-      return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu)
-      );
     case LOAD:
     case ADDL:
     case SUBL:
@@ -378,9 +440,15 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
         register_valid(stage->rs2, cpu) &&
         register_valid(stage->rs3, cpu)
       );
+    case STORE:
+      return !(
+        register_valid(stage->rs1, cpu) &&
+        register_valid(stage->rs2, cpu)
+      );
     case BZ:
     case BNZ:
       return !(
+        cpu->forward_zero->valid ||
         flag_valid(ZERO_FLAG, cpu)
       );
   }
@@ -552,6 +620,7 @@ int
 execute1(APEX_CPU* cpu)
 {
   CPU_Stage* stage = &cpu->stage[EX1];
+  // forward_bus_read()
 
   if (!stage->busy && !stage->stalled && !stage->flushed) {
     switch(stage->opcode) {
@@ -575,6 +644,42 @@ execute1(APEX_CPU* cpu)
         adder(stage, stage->rs1_value, stage->imm);
         break;
     }
+
+
+    switch (stage->opcode)
+    {
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+        cpu->forward_zero->valid = 1;
+        break;
+    default:
+        cpu->forward_zero->valid = 0;
+      break;
+    }
+    
+    switch(stage->opcode) {
+      // Register operations forward data
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+      case MOVC:
+      case EXOR:
+      case OR:
+      case AND:
+        broadcast_tag(cpu, 0, stage->rd);
+        break;
+      default:
+        cpu->forward[0].valid = 0;
+        break;
+    }
+
+
+
 
     /* Copy data from Execute latch to Memory latch*/
     cpu->stage[EX2] = cpu->stage[EX1];
@@ -662,6 +767,21 @@ execute2(APEX_CPU* cpu)
         break;
     }
 
+    switch(stage->opcode) {
+      // Register operations forward data
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+      case MOVC:
+      case EXOR:
+      case OR:
+      case AND:
+        cpu->forward[0].data = stage->buffer;
+        break;
+    }
+
     /* Copy data from Execute latch to Memory latch*/
     cpu->stage[MEM1] = cpu->stage[EX2];
 
@@ -696,6 +816,24 @@ memory1(APEX_CPU* cpu)
       break;
     }
 
+        
+    switch(stage->opcode) {
+      // Register operations forward data
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+      case MOVC:
+      case EXOR:
+      case OR:
+      case AND:
+      case LOAD:
+      case LDR:
+        broadcast_tag(cpu, 1, stage->rd);
+        break;
+    }
+
     /* Copy data from MEM1 latch to MEM2 latch*/
     cpu->stage[MEM2] = cpu->stage[MEM1];
 
@@ -720,6 +858,27 @@ memory2(APEX_CPU* cpu)
     // print_stage_content("Memory", cpu, stage);
     print_instruction(cpu, MEM2);
   }
+
+      switch(stage->opcode) {
+      // Register operations forward data
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+      case MOVC:
+      case EXOR:
+      case OR:
+      case AND:
+      case LOAD:
+      case LDR:
+        cpu->forward[1].data = stage->buffer;
+        break;
+      default:
+        cpu->forward[0].valid = 0;
+        break;
+    }
+
   return 0;
 }
 
