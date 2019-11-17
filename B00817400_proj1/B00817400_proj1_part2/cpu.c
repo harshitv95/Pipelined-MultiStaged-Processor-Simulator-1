@@ -226,6 +226,12 @@ void print(APEX_CPU* cpu) {
   
 }
 
+void invalidate_forward_buses(APEX_CPU *cpu) {
+  for (int i=0; i<NUM_FWD_BUSES; i++)
+    cpu->forward[i].valid = 0;
+  cpu->forward_zero->valid = 0;
+}
+
 /* Forwarding */
 void broadcast_tag(APEX_CPU *cpu, int forward_bus, int tag) {
   cpu->forward[forward_bus].tag = tag;
@@ -342,14 +348,8 @@ static int check_forwarded_register(int regNum, APEX_CPU* cpu) {
 }
 
 static void
-  forward_bus_read(APEX_CPU* cpu, CPU_Stage* stage, int readS1, int readS2, int readS3) {
+  forward_bus_read(APEX_CPU* cpu, CPU_Stage* stage) {
     int n = -1;
-    if ( readS1 && !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
-      stage->rs1_value = cpu->forward[n].data;
-    if ( readS2 && !stage->rs2_valid && (n = check_forwarded_register(stage->rs2, cpu)) > -1 )
-      stage->rs2_value = cpu->forward[n].data;
-    if ( readS3 && !stage->rs3_valid && (n = check_forwarded_register(stage->rs3, cpu)) > -1 )
-      stage->rs3_value = cpu->forward[n].data;
 
     switch (stage->opcode)
     {
@@ -372,9 +372,9 @@ static void
     case SUBL:
     case JUMP:
     case LOAD:
-    if ( readS1 && !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
+    if ( !stage->rs1_valid && (n = check_forwarded_register(stage->rs1, cpu)) > -1 )
       stage->rs1_value = cpu->forward[n].data;
-      break;
+    break;
     }
   }
 
@@ -383,7 +383,7 @@ static int register_valid(int regNum, APEX_CPU* cpu) {
   return
   // (cpu->forward[0].tag = regNum && cpu->forward[0].valid) ||
   // (cpu->forward[1].tag = regNum && cpu->forward[1].valid) ||
-  cpu->regs_valid[regNum];
+  cpu->regs_valid[regNum] || check_forwarded_register(regNum, cpu);
 }
 
 void lock_register(APEX_CPU* cpu, int regNum) {
@@ -620,6 +620,7 @@ int
 execute1(APEX_CPU* cpu)
 {
   CPU_Stage* stage = &cpu->stage[EX1];
+  forward_bus_read(cpu, stage);
   // forward_bus_read()
 
   if (!stage->busy && !stage->stalled && !stage->flushed) {
@@ -644,24 +645,10 @@ execute1(APEX_CPU* cpu)
         adder(stage, stage->rs1_value, stage->imm);
         break;
     }
-
-
-    switch (stage->opcode)
-    {
-      case ADD:
-      case ADDL:
-      case SUB:
-      case SUBL:
-      case MUL:
-        cpu->forward_zero->valid = 1;
-        break;
-    default:
-        cpu->forward_zero->valid = 0;
-      break;
-    }
     
+    // Broadcasting Tag of destination register
     switch(stage->opcode) {
-      // Register operations forward data
+      // Register operations that forward data in EX2 stage
       case ADD:
       case ADDL:
       case SUB:
@@ -674,12 +661,8 @@ execute1(APEX_CPU* cpu)
         broadcast_tag(cpu, 0, stage->rd);
         break;
       default:
-        cpu->forward[0].valid = 0;
         break;
     }
-
-
-
 
     /* Copy data from Execute latch to Memory latch*/
     cpu->stage[EX2] = cpu->stage[EX1];
@@ -766,9 +749,24 @@ execute2(APEX_CPU* cpu)
         branch_with_zero(cpu, 1, stage->imm);
         break;
     }
+    
+    switch (stage->opcode)
+    {
+      case ADD:
+      case ADDL:
+      case SUB:
+      case SUBL:
+      case MUL:
+        cpu->forward_zero->valid = 1;
+        cpu->forward_zero->data = stage->buffer == 0;
+        break;
+    default:
+        cpu->forward_zero->valid = 0;
+      break;
+    }
 
     switch(stage->opcode) {
-      // Register operations forward data
+      // Register operations that forward data in EX2 stage
       case ADD:
       case ADDL:
       case SUB:
@@ -779,6 +777,8 @@ execute2(APEX_CPU* cpu)
       case OR:
       case AND:
         cpu->forward[0].data = stage->buffer;
+        break;
+      default:
         break;
     }
 
@@ -815,7 +815,6 @@ memory1(APEX_CPU* cpu)
       memory_access(cpu, stage->buffer, 'r', MEM1);
       break;
     }
-
         
     switch(stage->opcode) {
       // Register operations forward data
@@ -831,6 +830,8 @@ memory1(APEX_CPU* cpu)
       case LOAD:
       case LDR:
         broadcast_tag(cpu, 1, stage->rd);
+        break;
+      default:
         break;
     }
 
@@ -858,26 +859,40 @@ memory2(APEX_CPU* cpu)
     // print_stage_content("Memory", cpu, stage);
     print_instruction(cpu, MEM2);
   }
+  
+  switch (stage->opcode)
+  {
+    case ADD:
+    case ADDL:
+    case SUB:
+    case SUBL:
+    case MUL:
+      cpu->forward_zero->valid = 1;
+      cpu->forward_zero->data = stage->buffer == 0;
+      break;
+  default:
+      cpu->forward_zero->valid = 0;
+    break;
+  }
 
-      switch(stage->opcode) {
-      // Register operations forward data
-      case ADD:
-      case ADDL:
-      case SUB:
-      case SUBL:
-      case MUL:
-      case MOVC:
-      case EXOR:
-      case OR:
-      case AND:
-      case LOAD:
-      case LDR:
-        cpu->forward[1].data = stage->buffer;
-        break;
-      default:
-        cpu->forward[0].valid = 0;
-        break;
-    }
+  switch(stage->opcode) {
+    // Register operations forward data
+    case ADD:
+    case ADDL:
+    case SUB:
+    case SUBL:
+    case MUL:
+    case MOVC:
+    case EXOR:
+    case OR:
+    case AND:
+    case LOAD:
+    case LDR:
+      cpu->forward[1].data = stage->buffer;
+      break;
+    default:
+      break;
+  }
 
   return 0;
 }
@@ -956,6 +971,7 @@ APEX_cpu_run(APEX_CPU* cpu, int numCycles)
     if (ENABLE_DEBUG_MESSAGES)
       printf("\n----------------------------------- CLOCK CYCLE %d -----------------------------------\n", cpu->clock);
 
+    invalidate_forward_buses(cpu);
     writeback(cpu);
     memory2(cpu);
     memory1(cpu);
