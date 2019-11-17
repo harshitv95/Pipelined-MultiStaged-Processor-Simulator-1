@@ -383,11 +383,11 @@ static int register_valid(int regNum, APEX_CPU* cpu) {
   return
   // (cpu->forward[0].tag = regNum && cpu->forward[0].valid) ||
   // (cpu->forward[1].tag = regNum && cpu->forward[1].valid) ||
-  cpu->regs_valid[regNum] || check_forwarded_register(regNum, cpu);
+  (cpu->regs_valid[regNum] > 0) || check_forwarded_register(regNum, cpu);
 }
 
 void lock_register(APEX_CPU* cpu, int regNum) {
-  cpu->regs_valid[regNum] = 0;
+  cpu->regs_valid[regNum]--;
 }
 
 /* Checks flags valid status */
@@ -458,7 +458,7 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
 static void register_wite(CPU_Stage* stage, APEX_CPU* cpu) {
   int regNum = stage->rd;
   cpu->regs[regNum] = stage->buffer;
-  cpu->regs_valid[regNum] = 1;
+  cpu->regs_valid[regNum]++;
 }
 
 /*
@@ -589,12 +589,12 @@ static void write_bytes_to_memory(int *data_memory, int address, int write_numbe
 static void memory_access(APEX_CPU* cpu, int address, char mode, int stageId) {
   switch(mode) {
     case 'r':
-      // cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
-      cpu->stage[stageId].buffer = read_bytes_from_memory(cpu->data_memory, address);
+      cpu->stage[MEM1].buffer = cpu->data_memory[get_memory_index(address)];
+      // cpu->stage[stageId].buffer = read_bytes_from_memory(cpu->data_memory, address);
       break;
     case 'w':
-      // cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
-      write_bytes_to_memory(cpu->data_memory, address, cpu->stage[stageId].rs1_value);
+      cpu->data_memory[get_memory_index(address)] = cpu->stage[MEM1].buffer;
+      // write_bytes_to_memory(cpu->data_memory, address, cpu->stage[stageId].rs1_value);
       break;
   }
 }
