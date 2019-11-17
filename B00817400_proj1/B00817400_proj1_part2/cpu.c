@@ -53,6 +53,9 @@ APEX_cpu_init(const char* filename, int debug)
   for (int i=0; i<NUM_FLAGS; i++) {
     cpu->flags_valid[i] = 1;
   }
+  for (int i=0; i<num_arch_registers; i++) {
+    cpu->regs_valid[i] = 1;
+  }
 
   /* Parse input file and create code memory */
   cpu->code_memory = create_code_memory(filename, &cpu->code_memory_size);
