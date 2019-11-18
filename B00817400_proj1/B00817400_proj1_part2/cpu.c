@@ -232,7 +232,9 @@ void print(APEX_CPU* cpu) {
 
 void invalidate_forward_buses(APEX_CPU *cpu) {
   for (int i=0; i<NUM_FWD_BUSES; i++)
-    cpu->forward[i].valid = cpu->broadcast[i].valid = 0;
+    cpu->forward[i].valid = 0;
+  for (int i=0; i<NUM_FWD_BUSES*2; i++)
+    cpu->broadcast[i].valid = 0;
   cpu->forward_zero->valid = 0;
 }
 
@@ -379,7 +381,7 @@ static int register_valid(int regNum, APEX_CPU* cpu) {
   return
   // (cpu->forward[0].tag = regNum && cpu->forward[0].valid) ||
   // (cpu->forward[1].tag = regNum && cpu->forward[1].valid) ||
-  (cpu->regs_valid[regNum] > 0) || check_forwarded_register(regNum, cpu);
+  (cpu->regs_valid[regNum] > 0) || check_forwarded_register(regNum, cpu) > -1;
 }
 
 void lock_register(APEX_CPU* cpu, int regNum) {
@@ -415,15 +417,15 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
     case EXOR:
     case STORE:
       return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu)
+        (stage->rs1_valid || register_valid(stage->rs1, cpu)) &&
+        (stage->rs2_valid || register_valid(stage->rs2, cpu))
         // && register_valid(stage->rd, cpu) // Output dependency
       );
     case LOAD:
     case ADDL:
     case SUBL:
       return !(
-        register_valid(stage->rs1, cpu)
+        (stage->rs1_valid || register_valid(stage->rs1, cpu))
         // && register_valid(stage->rd, cpu) // Output dependency
       );
     // case MOVC:
@@ -432,9 +434,9 @@ static int has_dependency(APEX_CPU* cpu, int stageId) {
     //   );
     case STR:
       return !(
-        register_valid(stage->rs1, cpu) &&
-        register_valid(stage->rs2, cpu) &&
-        register_valid(stage->rs3, cpu)
+        (stage->rs1_valid || register_valid(stage->rs1, cpu)) &&
+        (stage->rs2_valid || register_valid(stage->rs2, cpu)) &&
+        (stage->rs3_valid || register_valid(stage->rs3, cpu))
       );
     case BZ:
     case BNZ:
@@ -482,6 +484,7 @@ decode(APEX_CPU* cpu)
 {
 
   CPU_Stage* stage = &cpu->stage[DRF];
+  forward_bus_read(cpu, stage);
   if (stage->opcode != NOP && stage->opcode != _BUBBLE) {
     int has_dep = has_dependency(cpu, DRF);
     change_stall_status( DRF, cpu, has_dep );
@@ -811,6 +814,7 @@ execute2(APEX_CPU* cpu)
       case EXOR:
       case OR:
       case AND:
+        broadcast_tag(cpu, 1, stage->rd);
         cpu->forward[0].data = stage->buffer;
         cpu->forward[0].valid = 1;
         cpu->forward[0].tag = stage->rd;
@@ -866,7 +870,7 @@ memory1(APEX_CPU* cpu)
       case AND:
       case LOAD:
       case LDR:
-        broadcast_tag(cpu, 1, stage->rd);
+        broadcast_tag(cpu, 2, stage->rd);
         break;
       default:
         break;
@@ -925,9 +929,12 @@ memory2(APEX_CPU* cpu)
     case AND:
     case LOAD:
     case LDR:
+      broadcast_tag(cpu, 3, stage->rd);
       cpu->forward[1].data = stage->buffer;
       cpu->forward[1].valid = 1;
       cpu->forward[1].tag = stage->rd;
+
+      // broadcast_tag(cpu, 2, stage->rd);
       break;
     default:
       break;
@@ -972,6 +979,27 @@ writeback(APEX_CPU* cpu)
         register_wite(stage, cpu);
         break;
     }
+
+  switch(stage->opcode) {
+    // Register operations forward data
+    case ADD:
+    case ADDL:
+    case SUB:
+    case SUBL:
+    case MUL:
+    case MOVC:
+    case EXOR:
+    case OR:
+    case AND:
+    case LOAD:
+    case LDR:
+      // cpu->forward[2].data = stage->buffer;
+      // cpu->forward[2].valid = 1;
+      // cpu->forward[2].tag = stage->rd;
+      break;
+    default:
+      break;
+  }
 
     if (stage->opcode != _BUBBLE) cpu->ins_completed++;
 
